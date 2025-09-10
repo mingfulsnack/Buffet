@@ -7,7 +7,8 @@ import {
   FaTable, 
   FaClipboardList, 
   FaChartBar,
-  FaCalendarAlt 
+  FaCalendarAlt,
+  FaTachometerAlt
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.scss';
@@ -20,7 +21,7 @@ const Sidebar = () => {
     {
       path: '/menu',
       icon: <FaUtensils />,
-      label: 'Quản lý thực đơn'
+      label: 'Thực đơn'
     },
     {
       path: '/booking',
@@ -31,6 +32,11 @@ const Sidebar = () => {
 
   // Menu items for authenticated admin users
   const adminMenuItems = [
+    {
+      path: '/dashboard',
+      icon: <FaTachometerAlt />,
+      label: 'Dashboard'
+    },
     {
       path: '/menu',
       icon: <FaUtensils />,

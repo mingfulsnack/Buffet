@@ -1,6 +1,14 @@
 @use './variables.scss' as *;
 @use 'sass:color';
 
+// Import component styles
+@import '../components/LoadingSpinner.scss';
+@import '../components/Modal.scss';
+@import '../components/Button.scss';
+@import '../components/menu/DishForm.scss';
+@import '../components/menu/CategoryForm.scss';
+@import '../pages/MenuPage.scss';
+
 * {
   margin: 0;
   padding: 0;
@@ -41,35 +49,35 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  
+
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
-  
+
   &.btn-primary {
     background-color: $primary-color;
     color: $text-white;
-    
+
     &:hover:not(:disabled) {
       background-color: $secondary-color;
     }
   }
-  
+
   &.btn-secondary {
     background-color: $bg-primary;
     color: $text-primary;
     border: 1px solid $border-color;
-    
+
     &:hover:not(:disabled) {
       background-color: $bg-secondary;
     }
   }
-  
+
   &.btn-danger {
     background-color: $danger-color;
     color: $text-white;
-    
+
     &:hover:not(:disabled) {
       background-color: color.adjust($danger-color, $lightness: -10%);
     }
@@ -78,33 +86,35 @@ body {
 
 .form-group {
   margin-bottom: $spacing-lg;
-  
+
   label {
     display: block;
     margin-bottom: $spacing-sm;
     font-weight: $font-medium;
     color: $text-primary;
   }
-  
-  input, textarea, select {
+
+  input,
+  textarea,
+  select {
     width: 100%;
     padding: $spacing-sm $spacing-md;
     border: 1px solid $border-color;
     border-radius: $border-radius-md;
     font-size: $font-md;
     transition: border-color $transition-fast;
-    
+
     &:focus {
       outline: none;
       border-color: $primary-color;
       box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
     }
-    
+
     &::placeholder {
       color: $text-light;
     }
   }
-  
+
   textarea {
     resize: vertical;
     min-height: 100px;
@@ -123,19 +133,43 @@ body {
   text-align: right;
 }
 
-.mb-0 { margin-bottom: 0; }
-.mb-1 { margin-bottom: $spacing-xs; }
-.mb-2 { margin-bottom: $spacing-sm; }
-.mb-3 { margin-bottom: $spacing-md; }
-.mb-4 { margin-bottom: $spacing-lg; }
-.mb-5 { margin-bottom: $spacing-xl; }
+.mb-0 {
+  margin-bottom: 0;
+}
+.mb-1 {
+  margin-bottom: $spacing-xs;
+}
+.mb-2 {
+  margin-bottom: $spacing-sm;
+}
+.mb-3 {
+  margin-bottom: $spacing-md;
+}
+.mb-4 {
+  margin-bottom: $spacing-lg;
+}
+.mb-5 {
+  margin-bottom: $spacing-xl;
+}
 
-.mt-0 { margin-top: 0; }
-.mt-1 { margin-top: $spacing-xs; }
-.mt-2 { margin-top: $spacing-sm; }
-.mt-3 { margin-top: $spacing-md; }
-.mt-4 { margin-top: $spacing-lg; }
-.mt-5 { margin-top: $spacing-xl; }
+.mt-0 {
+  margin-top: 0;
+}
+.mt-1 {
+  margin-top: $spacing-xs;
+}
+.mt-2 {
+  margin-top: $spacing-sm;
+}
+.mt-3 {
+  margin-top: $spacing-md;
+}
+.mt-4 {
+  margin-top: $spacing-lg;
+}
+.mt-5 {
+  margin-top: $spacing-xl;
+}
 
 .d-flex {
   display: flex;
@@ -163,7 +197,8 @@ body {
 }
 
 .shadow-lg {
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+    0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
 .rounded {
@@ -179,7 +214,7 @@ body {
   .container {
     padding: 0 $spacing-md;
   }
-  
+
   .btn {
     width: 100%;
   }

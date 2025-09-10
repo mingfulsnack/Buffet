@@ -28,9 +28,15 @@ app.use(helmet());
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000'],
+  origin: process.env.CORS_ORIGIN
+    ? process.env.CORS_ORIGIN.split(',')
+    : [
+        'http://localhost:3000',
+        'http://localhost:5173', // Vite dev server
+        'http://127.0.0.1:5173',
+      ],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
 
@@ -40,8 +46,8 @@ const limiter = rateLimit({
   max: 100, // limit each IP to 100 requests per windowMs
   message: {
     success: false,
-    message: 'Too many requests from this IP, please try again later.'
-  }
+    message: 'Too many requests from this IP, please try again later.',
+  },
 });
 app.use(limiter);
 
@@ -51,8 +57,8 @@ const authLimiter = rateLimit({
   max: 5, // limit each IP to 5 login requests per windowMs
   message: {
     success: false,
-    message: 'Too many login attempts, please try again later.'
-  }
+    message: 'Too many login attempts, please try again later.',
+  },
 });
 
 // Body parsing middleware
@@ -63,27 +69,29 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.get('/health', async (req, res) => {
   try {
     // Test database connection
-    const dbResult = await pool.query('SELECT NOW() as server_time, version() as pg_version');
-    res.json({ 
-      success: true, 
+    const dbResult = await pool.query(
+      'SELECT NOW() as server_time, version() as pg_version'
+    );
+    res.json({
+      success: true,
       message: 'Server is healthy',
       timestamp: new Date().toISOString(),
       environment: process.env.NODE_ENV || 'development',
       database: {
         connected: true,
         server_time: dbResult.rows[0].server_time,
-        postgresql_version: dbResult.rows[0].pg_version.split(',')[0]
-      }
+        postgresql_version: dbResult.rows[0].pg_version.split(',')[0],
+      },
     });
   } catch (error) {
     console.error('❌ Health check failed:', error);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: 'Server health check failed',
       error: error.message,
       database: {
-        connected: false
-      }
+        connected: false,
+      },
     });
   }
 });
@@ -113,8 +121,8 @@ app.get('/', (req, res) => {
       customers: '/api/customers',
       employees: '/api/employees',
       reports: '/api/reports',
-      health: '/health'
-    }
+      health: '/health',
+    },
   });
 });
 
@@ -122,43 +130,44 @@ app.get('/', (req, res) => {
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
-    message: 'API endpoint not found'
+    message: 'API endpoint not found',
   });
 });
 
 // Global error handler
 app.use((error, req, res, next) => {
   console.error('Global error handler:', error);
-  
+
   // Handle specific error types
   if (error.name === 'ValidationError') {
     return res.status(400).json({
       success: false,
       message: 'Validation error',
-      details: error.message
+      details: error.message,
     });
   }
-  
+
   if (error.code === '23505') {
     return res.status(400).json({
       success: false,
-      message: 'Duplicate entry error'
+      message: 'Duplicate entry error',
     });
   }
-  
+
   if (error.code === '23503') {
     return res.status(400).json({
       success: false,
-      message: 'Foreign key constraint error'
+      message: 'Foreign key constraint error',
     });
   }
 
   // Default error response
   res.status(500).json({
     success: false,
-    message: process.env.NODE_ENV === 'production' 
-      ? 'Internal server error' 
-      : error.message
+    message:
+      process.env.NODE_ENV === 'production'
+        ? 'Internal server error'
+        : error.message,
   });
 });
 
@@ -166,10 +175,10 @@ app.use((error, req, res, next) => {
 const startServer = async () => {
   try {
     console.log('🚀 Starting Buffet Restaurant Management Server...\n');
-    
+
     // Test database connection first
     const dbConnected = await testConnection();
-    
+
     if (!dbConnected) {
       console.error('❌ Cannot start server: Database connection failed');
       console.log('\n📝 Please check:');
@@ -179,7 +188,7 @@ const startServer = async () => {
       console.log('   4. Database schema has been created');
       process.exit(1);
     }
-    
+
     // Start HTTP server
     const server = app.listen(PORT, () => {
       console.log('\n🎉 Server started successfully!');
@@ -204,7 +213,7 @@ const startServer = async () => {
       console.log('   Manager: manager / admin123');
       console.log('   Staff: staff1 / admin123\n');
     });
-    
+
     return server;
   } catch (error) {
     console.error('❌ Failed to start server:', error.message);

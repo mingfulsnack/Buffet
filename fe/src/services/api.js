@@ -1,8 +1,9 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
+const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 
-// Create axios instance
+// Create axios instance for authenticated requests
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
@@ -11,7 +12,16 @@ const api = axios.create({
   },
 });
 
-// Request interceptor to add auth token
+// Create axios instance for public requests (no auth required)
+const publicApi = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Request interceptor to add auth token (only for authenticated API)
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -25,18 +35,20 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle common errors
+// Response interceptor to handle common errors (only for authenticated API)
 api.interceptors.response.use(
   (response) => {
     return response;
   },
   (error) => {
+    // Only redirect to login on 401 (Unauthorized), not on other errors like 429
     if (error.response?.status === 401) {
       // Token expired or invalid
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
     }
+    // For other errors (like 429 rate limit), just reject without redirect
     return Promise.reject(error);
   }
 );
@@ -51,7 +63,7 @@ export const authAPI = {
 
 // Menu API
 export const menuAPI = {
-  getPublicMenu: () => api.get('/public/menu'),
+  getPublicMenu: () => publicApi.get('/public/menu'),
   getDishes: (params) => api.get('/menu/dishes', { params }),
   createDish: (data) => api.post('/menu/dishes', data),
   updateDish: (id, data) => api.put(`/menu/dishes/${id}`, data),
@@ -90,7 +102,8 @@ export const tableAPI = {
   updateTable: (id, data) => api.put(`/tables/${id}`, data),
   deleteTable: (id) => api.delete(`/tables/${id}`),
   getTable: (id) => api.get(`/tables/${id}`),
-  updateStatus: (id, status) => api.patch(`/tables/${id}/status`, { trangthai: status }),
+  updateStatus: (id, status) =>
+    api.patch(`/tables/${id}/status`, { trangthai: status }),
   getAreas: () => api.get('/tables/areas'),
 };
 
@@ -102,14 +115,16 @@ export const bookingAPI = {
   deleteBooking: (id) => api.delete(`/bookings/${id}`),
   getBooking: (id) => api.get(`/bookings/${id}`),
   confirmBooking: (id) => api.patch(`/bookings/${id}/confirm`),
-  cancelBooking: (id, reason) => api.patch(`/bookings/${id}/cancel`, { reason }),
+  cancelBooking: (id, reason) =>
+    api.patch(`/bookings/${id}/cancel`, { reason }),
   checkIn: (id) => api.patch(`/bookings/${id}/checkin`),
   checkOut: (id) => api.patch(`/bookings/${id}/checkout`),
-  
+
   // Public booking (no auth required)
-  createPublicBooking: (data) => api.post('/public/bookings', data),
-  cancelPublicBooking: (token, reason) => api.patch(`/public/bookings/${token}/cancel`, { reason }),
-  getPublicBooking: (token) => api.get(`/public/bookings/${token}`),
+  createPublicBooking: (data) => publicApi.post('/public/bookings', data),
+  cancelPublicBooking: (token, reason) =>
+    publicApi.patch(`/public/bookings/${token}/cancel`, { reason }),
+  getPublicBooking: (token) => publicApi.get(`/public/bookings/${token}`),
 };
 
 // Reports API
