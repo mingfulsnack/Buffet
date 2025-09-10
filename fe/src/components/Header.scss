@@ -1,0 +1,99 @@
+@use '../styles/variables.scss' as *;
+
+.header {
+  position: fixed;
+  top: 0;
+  left: $sidebar-width;
+  right: 0;
+  height: $header-height;
+  background-color: $header-bg;
+  border-bottom: 1px solid $border-color;
+  box-shadow: $header-shadow;
+  z-index: $z-header;
+
+  .header-content {
+    height: 100%;
+    padding: 0 $spacing-xl;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .header-left {
+      flex: 1;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+
+      .login-btn {
+        display: flex;
+        align-items: center;
+        gap: $spacing-sm;
+        
+        svg {
+          font-size: $font-sm;
+        }
+      }
+
+      .user-menu {
+        display: flex;
+        align-items: center;
+        gap: $spacing-lg;
+
+        .user-info {
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+          color: $text-primary;
+
+          .user-icon {
+            font-size: $font-lg;
+            color: $text-secondary;
+          }
+
+          .user-name {
+            font-weight: $font-semibold;
+            font-size: $font-md;
+          }
+
+          .user-role {
+            font-size: $font-sm;
+            color: $text-secondary;
+          }
+        }
+
+        .logout-btn {
+          display: flex;
+          align-items: center;
+          gap: $spacing-sm;
+          
+          svg {
+            font-size: $font-sm;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .header {
+    left: 0;
+    
+    .header-content {
+      padding: 0 $spacing-lg;
+      
+      .user-menu {
+        gap: $spacing-md;
+        
+        .user-info {
+          .user-name, .user-role {
+            display: none;
+          }
+        }
+      }
+    }
+  }
+}

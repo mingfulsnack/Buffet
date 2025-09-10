@@ -1,0 +1,31 @@
+@use '../styles/variables.scss' as *;
+
+.app-layout {
+  min-height: 100vh;
+  background-color: $bg-secondary;
+
+  .main-content {
+    margin-left: $sidebar-width;
+    margin-top: $header-height;
+    min-height: calc(100vh - #{$header-height});
+
+    .content-wrapper {
+      padding: $spacing-xl;
+      max-width: 100%;
+      width: 100%;
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .app-layout {
+    .main-content {
+      margin-left: 0;
+      
+      .content-wrapper {
+        padding: $spacing-lg;
+      }
+    }
+  }
+}

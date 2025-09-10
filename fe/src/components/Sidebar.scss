@@ -1,0 +1,105 @@
+@use '../styles/variables.scss' as *;
+
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: $sidebar-width;
+  background-color: $sidebar-bg;
+  z-index: $z-sidebar;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 4px rgba(0, 0, 0, 0.1);
+
+  .sidebar-header {
+    padding: $spacing-xl $spacing-lg;
+    border-bottom: 1px solid $border-dark;
+
+    .logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      .logo-image {
+        max-width: 120px;
+        max-height: 60px;
+        height: auto;
+      }
+
+      .logo-text {
+        font-size: $font-xl;
+        font-weight: $font-bold;
+        color: $text-white;
+        text-align: center;
+      }
+    }
+  }
+
+  .sidebar-nav {
+    flex: 1;
+    padding: $spacing-lg 0;
+
+    .menu-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+
+      .menu-item {
+        margin-bottom: $spacing-xs;
+
+        .menu-link {
+          display: flex;
+          align-items: center;
+          padding: $spacing-md $spacing-lg;
+          color: $sidebar-text;
+          text-decoration: none;
+          transition: all $transition-fast;
+          border-left: 3px solid transparent;
+
+          &:hover {
+            background-color: $sidebar-item-hover;
+            color: $sidebar-text-hover;
+          }
+
+          &.active {
+            background-color: $sidebar-item-active;
+            color: $sidebar-item-active-text;
+            border-left-color: $accent-color;
+            font-weight: $font-semibold;
+
+            .menu-icon {
+              color: $sidebar-item-active-text;
+            }
+          }
+
+          .menu-icon {
+            font-size: $font-lg;
+            margin-right: $spacing-md;
+            min-width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+
+          .menu-text {
+            font-size: $font-md;
+            font-weight: $font-medium;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform $transition-normal;
+
+    &.mobile-open {
+      transform: translateX(0);
+    }
+  }
+}
