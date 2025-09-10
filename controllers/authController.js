@@ -1,5 +1,5 @@
-const pool = require('../config/database');
-const { hashPassword, verifyPassword, generateToken, formatResponse, formatErrorResponse } = require('../utils/helpers');
+const { Employee } = require('../models');
+const { verifyPassword, generateToken, formatResponse, formatErrorResponse } = require('../utils/helpers');
 
 // Đăng nhập
 const login = async (req, res) => {
@@ -11,18 +11,11 @@ const login = async (req, res) => {
     }
 
     // Tìm nhân viên
-    const result = await pool.query(`
-      SELECT nv.*, vt.tenvaitro 
-      FROM nhanvien nv
-      LEFT JOIN vai_tro vt ON nv.mavaitro = vt.mavaitro
-      WHERE nv.tendangnhap = $1 AND nv.is_active = true
-    `, [tendangnhap]);
+    const employee = await Employee.findByUsername(tendangnhap);
 
-    if (result.rows.length === 0) {
+    if (!employee) {
       return res.status(401).json(formatErrorResponse('Tên đăng nhập hoặc mật khẩu không đúng'));
     }
-
-    const employee = result.rows[0];
 
     // Kiểm tra mật khẩu
     const isValidPassword = await verifyPassword(matkhau, employee.matkhauhash);
@@ -65,26 +58,20 @@ const changePassword = async (req, res) => {
       return res.status(400).json(formatErrorResponse('Mật khẩu mới phải có ít nhất 6 ký tự'));
     }
 
-    // Lấy mật khẩu hiện tại
-    const result = await pool.query('SELECT matkhauhash FROM nhanvien WHERE manv = $1', [manv]);
-    if (result.rows.length === 0) {
+    // Lấy thông tin nhân viên hiện tại
+    const employee = await Employee.findById(manv);
+    if (!employee) {
       return res.status(404).json(formatErrorResponse('Không tìm thấy nhân viên'));
     }
 
     // Kiểm tra mật khẩu cũ
-    const isValidOldPassword = await verifyPassword(matkhau_cu, result.rows[0].matkhauhash);
+    const isValidOldPassword = await verifyPassword(matkhau_cu, employee.matkhauhash);
     if (!isValidOldPassword) {
       return res.status(400).json(formatErrorResponse('Mật khẩu cũ không đúng'));
     }
 
-    // Hash mật khẩu mới
-    const newPasswordHash = await hashPassword(matkhau_moi);
-
     // Cập nhật mật khẩu
-    await pool.query(
-      'UPDATE nhanvien SET matkhauhash = $1 WHERE manv = $2',
-      [newPasswordHash, manv]
-    );
+    await Employee.updatePassword(manv, matkhau_moi);
 
     res.json(formatResponse(true, null, 'Đổi mật khẩu thành công'));
 
@@ -99,19 +86,13 @@ const getProfile = async (req, res) => {
   try {
     const manv = req.user.manv;
 
-    const result = await pool.query(`
-      SELECT nv.manv, nv.hoten, nv.tendangnhap, nv.sodienthoai, nv.email, 
-             nv.calam, nv.ngayvaolam, nv.created_at, vt.tenvaitro
-      FROM nhanvien nv
-      LEFT JOIN vai_tro vt ON nv.mavaitro = vt.mavaitro
-      WHERE nv.manv = $1 AND nv.is_active = true
-    `, [manv]);
+    const employee = await Employee.findByIdWithPermissions(manv);
 
-    if (result.rows.length === 0) {
+    if (!employee) {
       return res.status(404).json(formatErrorResponse('Không tìm thấy thông tin nhân viên'));
     }
 
-    res.json(formatResponse(true, result.rows[0], 'Lấy thông tin profile thành công'));
+    res.json(formatResponse(true, employee, 'Lấy thông tin profile thành công'));
 
   } catch (error) {
     console.error('Get profile error:', error);

@@ -73,7 +73,8 @@ const schemas = {
     dongia: Joi.number().min(0).required(),
     trangthai: Joi.string().valid('Con', 'Het'),
     is_addon: Joi.boolean(),
-    ghichu: Joi.string()
+    ghichu: Joi.string(),
+    image: Joi.string().allow(null, '')
   }),
 
   // Set buffet
@@ -83,7 +84,8 @@ const schemas = {
     thoigian_batdau: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
     thoigian_ketthuc: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
     mota: Joi.string(),
-    trangthai: Joi.string().valid('HoatDong', 'TamNgung')
+    trangthai: Joi.string().valid('HoatDong', 'TamNgung'),
+    image: Joi.string().allow(null, '')
   }),
 
   // Khuyến mãi
