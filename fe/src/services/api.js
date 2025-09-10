@@ -105,6 +105,10 @@ export const tableAPI = {
   updateStatus: (id, status) =>
     api.patch(`/tables/${id}/status`, { trangthai: status }),
   getAreas: () => api.get('/tables/areas'),
+
+  // Public table API (no auth required)
+  getPublicTables: (params) => publicApi.get('/public/tables', { params }),
+  getPublicAreas: () => publicApi.get('/public/areas'),
 };
 
 // Booking API

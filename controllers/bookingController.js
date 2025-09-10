@@ -5,6 +5,10 @@ const moment = require('moment');
 // Tạo đặt bàn mới (cho khách hàng)
 const createBooking = async (req, res) => {
   try {
+    console.log('=== CREATE BOOKING REQUEST ===');
+    console.log('Request body:', JSON.stringify(req.body, null, 2));
+    console.log('Request headers:', req.headers);
+
     const bookingData = {
       makh: req.body.makh,
       guest_hoten: req.body.guest_hoten,
@@ -13,22 +17,30 @@ const createBooking = async (req, res) => {
       maban: req.body.maban,
       songuoi: req.body.songuoi,
       thoigian_dat: req.body.thoigian_dat,
-      ghichu: req.body.ghichu
+      ghichu: req.body.ghichu,
     };
+
+    console.log(
+      'Processed booking data:',
+      JSON.stringify(bookingData, null, 2)
+    );
+    console.log('thoigian_dat type:', typeof bookingData.thoigian_dat);
+    console.log('thoigian_dat value:', bookingData.thoigian_dat);
 
     const booking = await Booking.createBooking(bookingData);
 
     // Lấy thông tin đầy đủ để trả về
     const fullBooking = await Booking.findByIdWithHistory(booking.maphieu);
 
-    res.status(201).json(formatResponse(
-      true, 
-      fullBooking, 
-      'Đặt bàn thành công'
-    ));
-
+    console.log('Booking created successfully:', booking.maphieu);
+    res
+      .status(201)
+      .json(formatResponse(true, fullBooking, 'Đặt bàn thành công'));
   } catch (error) {
-    console.error('Create booking error:', error);
+    console.error('=== CREATE BOOKING ERROR ===');
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', error);
     res.status(500).json(formatErrorResponse(error.message || 'Lỗi server'));
   }
 };
@@ -36,7 +48,13 @@ const createBooking = async (req, res) => {
 // Lấy danh sách đặt bàn (cho admin)
 const getBookings = async (req, res) => {
   try {
-    const { page = 1, limit = 10, trangthai, ngay_bat_dau, ngay_ket_thuc } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      trangthai,
+      ngay_bat_dau,
+      ngay_ket_thuc,
+    } = req.query;
 
     const conditions = {};
     if (trangthai) conditions.trangthai = trangthai;
@@ -45,13 +63,11 @@ const getBookings = async (req, res) => {
 
     const result = await Booking.findAllWithDetails(conditions, page, limit);
 
-    res.json(formatResponse(
-      true,
-      result.data,
-      'Lấy danh sách đặt bàn thành công',
-      { pagination: result.pagination }
-    ));
-
+    res.json(
+      formatResponse(true, result.data, 'Lấy danh sách đặt bàn thành công', {
+        pagination: result.pagination,
+      })
+    );
   } catch (error) {
     console.error('Get bookings error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -66,11 +82,12 @@ const getBookingDetail = async (req, res) => {
     const booking = await Booking.findByIdWithHistory(id);
 
     if (!booking) {
-      return res.status(404).json(formatErrorResponse('Không tìm thấy phiếu đặt bàn'));
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy phiếu đặt bàn'));
     }
 
     res.json(formatResponse(true, booking, 'Lấy chi tiết đặt bàn thành công'));
-
   } catch (error) {
     console.error('Get booking detail error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -86,11 +103,12 @@ const confirmBooking = async (req, res) => {
     const result = await Booking.confirmBooking(id, manv);
 
     if (!result) {
-      return res.status(404).json(formatErrorResponse('Không tìm thấy phiếu đặt bàn'));
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy phiếu đặt bàn'));
     }
 
     res.json(formatResponse(true, null, 'Xác nhận đặt bàn thành công'));
-
   } catch (error) {
     console.error('Confirm booking error:', error);
     if (error.message.includes('trạng thái')) {
@@ -108,23 +126,29 @@ const cancelBooking = async (req, res) => {
     const { id } = req.params; // maphieu cho admin
     const { ly_do } = req.body;
     const manv = req.user?.manv; // Có thể null nếu là khách hàng
-    
+
     const identifier = token || id;
     if (!identifier) {
-      return res.status(400).json(formatErrorResponse('Thiếu thông tin để hủy đặt bàn'));
+      return res
+        .status(400)
+        .json(formatErrorResponse('Thiếu thông tin để hủy đặt bàn'));
     }
 
     const result = await Booking.cancelBooking(identifier, manv, ly_do);
 
     if (!result) {
-      return res.status(404).json(formatErrorResponse('Không tìm thấy phiếu đặt bàn'));
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy phiếu đặt bàn'));
     }
 
     res.json(formatResponse(true, null, 'Hủy đặt bàn thành công'));
-
   } catch (error) {
     console.error('Cancel booking error:', error);
-    if (error.message.includes('deadline') || error.message.includes('trạng thái')) {
+    if (
+      error.message.includes('deadline') ||
+      error.message.includes('trạng thái')
+    ) {
       res.status(400).json(formatErrorResponse(error.message));
     } else {
       res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -140,11 +164,12 @@ const getBookingByToken = async (req, res) => {
     const booking = await Booking.findByToken(token);
 
     if (!booking) {
-      return res.status(404).json(formatErrorResponse('Không tìm thấy phiếu đặt bàn'));
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy phiếu đặt bàn'));
     }
 
     res.json(formatResponse(true, booking, 'Lấy thông tin đặt bàn thành công'));
-
   } catch (error) {
     console.error('Get booking by token error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -157,5 +182,5 @@ module.exports = {
   getBookingDetail,
   confirmBooking,
   cancelBooking,
-  getBookingByToken
+  getBookingByToken,
 };
