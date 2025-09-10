@@ -9,12 +9,10 @@ const Dashboard = () => {
       <h1>Dashboard</h1>
       <div className="welcome-message">
         <h2>Chào mừng, {user?.hoten || 'User'}!</h2>
-        <p>Vai trò: {user?.vaitro?.tenvaitro || 'Unknown'}</p>
-        {isAdmin() && (
-          <p>Bạn có quyền truy cập đầy đủ hệ thống quản lý.</p>
-        )}
+        <p>Vai trò: {user?.tenvaitro || 'Unknown'}</p>
+        {isAdmin() && <p>Bạn có quyền truy cập đầy đủ hệ thống quản lý.</p>}
       </div>
-      
+
       <div className="dashboard-stats">
         <div className="stat-card">
           <h3>Tổng quan hệ thống</h3>

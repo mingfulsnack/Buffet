@@ -20,16 +20,22 @@
       font-weight: 700;
     }
 
-    .header-actions {
+    .admin-actions {
       display: flex;
       gap: 1rem;
+
+      .btn {
+        min-width: auto;
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+      }
     }
 
     @media (max-width: 768px) {
       flex-direction: column;
       gap: 1rem;
 
-      .header-actions {
+      .admin-actions {
         width: 100%;
         justify-content: center;
       }
@@ -75,17 +81,17 @@
     }
   }
 
-   // Dishes Section
-   .dishes-section {
-     .filters {
-       display: grid;
-       grid-template-columns: 2fr 1fr;
-       gap: 1rem;
-       margin-bottom: 2rem;
-       padding: 1.5rem;
-       background: white;
-       border-radius: 12px;
-       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  // Dishes Section
+  .dishes-section {
+    .filters {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
       .search-box input {
         width: 100%;
@@ -118,104 +124,118 @@
         }
       }
 
-       @media (max-width: 768px) {
-         grid-template-columns: 1fr;
-       }
-     }
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
 
-     .dishes-table {
-       background: white;
-       border-radius: 12px;
-       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-       overflow: hidden;
-       overflow-x: auto;
+    .dishes-table {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      overflow-x: auto;
 
-       table {
-         width: 100%;
-         border-collapse: collapse;
+      table {
+        width: 100%;
+        border-collapse: collapse;
 
-         th {
-           background-color: #f8fafc;
-           padding: 1rem;
-           text-align: left;
-           font-weight: 600;
-           color: #374151;
-           border-bottom: 2px solid #e5e7eb;
-           white-space: nowrap;
-         }
+        th {
+          background-color: #f8fafc;
+          padding: 1rem;
+          text-align: left;
+          font-weight: 600;
+          color: #374151;
+          border-bottom: 2px solid #e5e7eb;
+          white-space: nowrap;
+        }
 
-         td {
-           padding: 1rem;
-           border-bottom: 1px solid #f3f4f6;
-           vertical-align: middle;
+        td {
+          padding: 1rem;
+          border-bottom: 1px solid #f3f4f6;
+          vertical-align: middle;
 
-           &.dish-image-cell {
-             width: 80px;
-             padding: 0.5rem;
+          &.dish-image-cell {
+            width: 80px;
+            padding: 0.5rem;
 
-             .dish-image {
-               width: 60px;
-               height: 60px;
-               object-fit: cover;
-               border-radius: 8px;
-             }
+            .dish-image {
+              width: 60px;
+              height: 60px;
+              object-fit: cover;
+              border-radius: 8px;
+            }
 
-             .no-image {
-               width: 60px;
-               height: 60px;
-               background-color: #f3f4f6;
-               border-radius: 8px;
-               display: flex;
-               align-items: center;
-               justify-content: center;
-               font-size: 0.75rem;
-               color: #6b7280;
-               text-align: center;
-             }
-           }
+            .no-image {
+              width: 60px;
+              height: 60px;
+              background-color: #f3f4f6;
+              border-radius: 8px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 0.75rem;
+              color: #6b7280;
+              text-align: center;
+            }
+          }
 
-           &.dish-name {
-             font-weight: 600;
-             color: #1f2937;
-             min-width: 150px;
-           }
+          &.dish-name {
+            font-weight: 600;
+            color: #1f2937;
+            min-width: 150px;
+          }
 
-           &.dish-note {
-             color: #6b7280;
-             font-style: italic;
-             max-width: 200px;
-           }
+          &.dish-note {
+            color: #6b7280;
+            font-style: italic;
+            max-width: 200px;
+          }
 
-           &.dish-price {
-             font-weight: 700;
-             color: #059669;
-             white-space: nowrap;
-           }
+          &.dish-price {
+            font-weight: 700;
+            color: #059669;
+            white-space: nowrap;
+          }
 
-           &.dish-category {
-             color: #374151;
-             font-size: 0.875rem;
-           }
-         }
+          &.dish-category {
+            color: #374151;
+            font-size: 0.875rem;
+          }
 
-         tr:hover {
-           background-color: #f9fafb;
-         }
+          &.dish-actions,
+          &.set-actions {
+            .btn {
+              margin-right: 0.5rem;
+              padding: 0.4rem 0.8rem;
+              font-size: 0.8rem;
+              min-width: auto;
 
-         tr:last-child td {
-           border-bottom: none;
-         }
-       }
+              &:last-child {
+                margin-right: 0;
+              }
+            }
+          }
+        }
 
-       .no-dishes {
-         padding: 3rem;
-         text-align: center;
-         color: #6b7280;
-         font-size: 1.125rem;
-       }
-     }
+        tr:hover {
+          background-color: #f9fafb;
+        }
 
-     .dishes-grid {
+        tr:last-child td {
+          border-bottom: none;
+        }
+      }
+
+      .no-dishes {
+        padding: 3rem;
+        text-align: center;
+        color: #6b7280;
+        font-size: 1.125rem;
+      }
+    }
+
+    .dishes-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
       gap: 1.5rem;
@@ -380,103 +400,103 @@
     }
   }
 
-   // Buffet Sets Section
-   .buffet-sets-section {
-     .buffet-sets-table {
-       background: white;
-       border-radius: 12px;
-       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-       overflow: hidden;
-       overflow-x: auto;
+  // Buffet Sets Section
+  .buffet-sets-section {
+    .buffet-sets-table {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      overflow-x: auto;
 
-       table {
-         width: 100%;
-         border-collapse: collapse;
+      table {
+        width: 100%;
+        border-collapse: collapse;
 
-         th {
-           background-color: #f8fafc;
-           padding: 1rem;
-           text-align: left;
-           font-weight: 600;
-           color: #374151;
-           border-bottom: 2px solid #e5e7eb;
-           white-space: nowrap;
-         }
+        th {
+          background-color: #f8fafc;
+          padding: 1rem;
+          text-align: left;
+          font-weight: 600;
+          color: #374151;
+          border-bottom: 2px solid #e5e7eb;
+          white-space: nowrap;
+        }
 
-         td {
-           padding: 1rem;
-           border-bottom: 1px solid #f3f4f6;
-           vertical-align: middle;
+        td {
+          padding: 1rem;
+          border-bottom: 1px solid #f3f4f6;
+          vertical-align: middle;
 
-           &.set-image-cell {
-             width: 80px;
-             padding: 0.5rem;
+          &.set-image-cell {
+            width: 80px;
+            padding: 0.5rem;
 
-             .set-image {
-               width: 60px;
-               height: 60px;
-               object-fit: cover;
-               border-radius: 8px;
-             }
+            .set-image {
+              width: 60px;
+              height: 60px;
+              object-fit: cover;
+              border-radius: 8px;
+            }
 
-             .no-image {
-               width: 60px;
-               height: 60px;
-               background-color: #f3f4f6;
-               border-radius: 8px;
-               display: flex;
-               align-items: center;
-               justify-content: center;
-               font-size: 0.75rem;
-               color: #6b7280;
-               text-align: center;
-             }
-           }
+            .no-image {
+              width: 60px;
+              height: 60px;
+              background-color: #f3f4f6;
+              border-radius: 8px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              font-size: 0.75rem;
+              color: #6b7280;
+              text-align: center;
+            }
+          }
 
-           &.set-name {
-             font-weight: 600;
-             color: #1f2937;
-             min-width: 200px;
-           }
+          &.set-name {
+            font-weight: 600;
+            color: #1f2937;
+            min-width: 200px;
+          }
 
-           &.set-price {
-             font-weight: 700;
-             color: #059669;
-             white-space: nowrap;
-           }
+          &.set-price {
+            font-weight: 700;
+            color: #059669;
+            white-space: nowrap;
+          }
 
-           &.set-time {
-             color: #374151;
-             font-size: 0.875rem;
-           }
+          &.set-time {
+            color: #374151;
+            font-size: 0.875rem;
+          }
 
-           &.set-description {
-             color: #6b7280;
-             max-width: 300px;
-           }
-         }
+          &.set-description {
+            color: #6b7280;
+            max-width: 300px;
+          }
+        }
 
-         tr:hover {
-           background-color: #f9fafb;
-         }
+        tr:hover {
+          background-color: #f9fafb;
+        }
 
-         tr:last-child td {
-           border-bottom: none;
-         }
-       }
+        tr:last-child td {
+          border-bottom: none;
+        }
+      }
 
-       .no-buffet-sets {
-         padding: 3rem;
-         text-align: center;
-         color: #6b7280;
-         font-size: 1.125rem;
-       }
-     }
+      .no-buffet-sets {
+        padding: 3rem;
+        text-align: center;
+        color: #6b7280;
+        font-size: 1.125rem;
+      }
+    }
 
-     .buffet-sets-grid {
-       display: grid;
-       grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-       gap: 2rem;
+    .buffet-sets-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+      gap: 2rem;
 
       .buffet-set-card {
         background: white;

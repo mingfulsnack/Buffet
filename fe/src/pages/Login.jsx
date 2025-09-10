@@ -7,7 +7,7 @@ import './Login.scss';
 const Login = () => {
   const [formData, setFormData] = useState({
     tendangnhap: '',
-    matkhau: ''
+    matkhau: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -17,13 +17,13 @@ const Login = () => {
   const location = useLocation();
 
   // Redirect to intended page after login
-  const from = location.state?.from?.pathname || '/';
+  const from = location.state?.from?.pathname || '/dashboard'; // Default to dashboard for admin
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
     // Clear error when user starts typing
     if (error) setError('');
@@ -36,10 +36,14 @@ const Login = () => {
 
     try {
       const response = await authAPI.login(formData);
-      
+
       if (response.data.success) {
-        const { user, token } = response.data.data;
-        login(user, token);
+        const { employee, token } = response.data.data;
+        console.log('Login successful - Employee data:', employee);
+        console.log('Employee role:', employee?.vaitro);
+
+        // Pass employee as user to login function
+        login(employee, token);
         navigate(from, { replace: true });
       } else {
         setError(response.data.message || 'Đăng nhập thất bại');
@@ -47,8 +51,8 @@ const Login = () => {
     } catch (error) {
       console.error('Login error:', error);
       setError(
-        error.response?.data?.message || 
-        'Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.'
+        error.response?.data?.message ||
+          'Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.'
       );
     } finally {
       setIsLoading(false);
@@ -65,9 +69,9 @@ const Login = () => {
       <div className="login-container">
         {/* Left panel with image */}
         <div className="login-image-panel">
-          <img 
-            src="/images/login-image.jpg" 
-            alt="Restaurant" 
+          <img
+            src="/images/login-image.jpg"
+            alt="Restaurant"
             className="login-image"
             onError={(e) => {
               // Fallback if image doesn't exist
@@ -80,12 +84,8 @@ const Login = () => {
         <div className="login-form-panel">
           <div className="login-form-container">
             <h1 className="login-title">LOGIN</h1>
-            
-            {error && (
-              <div className="error-message">
-                {error}
-              </div>
-            )}
+
+            {error && <div className="error-message">{error}</div>}
 
             <form onSubmit={handleSubmit} className="login-form">
               <div className="form-group">
@@ -112,8 +112,8 @@ const Login = () => {
                 />
               </div>
 
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 className="btn btn-primary login-submit-btn"
                 disabled={isLoading}
               >

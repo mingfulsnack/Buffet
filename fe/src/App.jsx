@@ -1,5 +1,10 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppLayout from './layouts/AppLayout';
 import Login from './pages/Login';
@@ -7,13 +12,22 @@ import Dashboard from './pages/Dashboard';
 import MenuPage from './pages/MenuPage';
 import BookingPage from './pages/BookingPage';
 import TablesPage from './pages/TablesPage';
+import AdminBookingsPage from './pages/AdminBookingsPage';
+import EmployeesPage from './pages/EmployeesPage';
 import './styles/globals.scss';
 
 // Protected Route component
 const ProtectedRoute = ({ children, adminOnly = false }) => {
   const { isAuthenticated, isAdmin, isLoading } = useAuth();
 
-  console.log('ProtectedRoute - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated(), 'adminOnly:', adminOnly);
+  console.log(
+    'ProtectedRoute - isLoading:',
+    isLoading,
+    'isAuthenticated:',
+    isAuthenticated(),
+    'adminOnly:',
+    adminOnly
+  );
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -36,7 +50,12 @@ const ProtectedRoute = ({ children, adminOnly = false }) => {
 const PublicRoute = ({ children }) => {
   const { isAuthenticated, isLoading } = useAuth();
 
-  console.log('PublicRoute - isLoading:', isLoading, 'isAuthenticated:', isAuthenticated());
+  console.log(
+    'PublicRoute - isLoading:',
+    isLoading,
+    'isAuthenticated:',
+    isAuthenticated()
+  );
 
   if (isLoading) {
     return <div>Loading...</div>;
@@ -63,57 +82,65 @@ function App() {
             <Route index element={<MenuPage />} />
             <Route path="menu" element={<MenuPage />} />
             <Route path="booking" element={<BookingPage />} />
-            
+
             {/* Admin protected routes */}
-            <Route 
-              path="dashboard" 
+            <Route
+              path="dashboard"
               element={
                 <ProtectedRoute>
                   <Dashboard />
                 </ProtectedRoute>
-              } 
+              }
             />
-            
+
             {/* Admin only routes */}
-            <Route 
-              path="tables" 
+            <Route
+              path="bookings"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminBookingsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="employees"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <EmployeesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="tables"
               element={
                 <ProtectedRoute adminOnly={true}>
                   <TablesPage />
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="customers" 
+            <Route
+              path="customers"
               element={
                 <ProtectedRoute adminOnly={true}>
                   <div>Customers Page</div>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="employees" 
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <div>Employees Page</div>
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="orders" 
+            <Route
+              path="orders"
               element={
                 <ProtectedRoute adminOnly={true}>
                   <div>Orders Page</div>
                 </ProtectedRoute>
-              } 
+              }
             />
-            <Route 
-              path="reports" 
+            <Route
+              path="reports"
               element={
                 <ProtectedRoute adminOnly={true}>
                   <div>Reports Page</div>
                 </ProtectedRoute>
-              } 
+              }
             />
           </Route>
 

@@ -1,33 +1,41 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { 
-  FaUtensils, 
-  FaUsers, 
-  FaUserTie, 
-  FaTable, 
-  FaClipboardList, 
+import {
+  FaUtensils,
+  FaUsers,
+  FaUserTie,
+  FaTable,
+  FaClipboardList,
   FaChartBar,
   FaCalendarAlt,
-  FaTachometerAlt
+  FaTachometerAlt,
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.scss';
 
 const Sidebar = () => {
-  const { isAuthenticated, isAdmin } = useAuth();
+  const { isAuthenticated, isAdmin, user } = useAuth();
+
+  // Debug logging
+  console.log('Sidebar Debug:', {
+    isAuthenticated: isAuthenticated(),
+    isAdmin: isAdmin(),
+    user: user,
+    userRole: user?.vaitro,
+  });
 
   // Menu items for guests (not logged in)
   const guestMenuItems = [
     {
       path: '/menu',
       icon: <FaUtensils />,
-      label: 'Thực đơn'
+      label: 'Thực đơn',
     },
     {
       path: '/booking',
       icon: <FaCalendarAlt />,
-      label: 'Đặt bàn'
-    }
+      label: 'Đặt bàn',
+    },
   ];
 
   // Menu items for authenticated admin users
@@ -35,51 +43,51 @@ const Sidebar = () => {
     {
       path: '/dashboard',
       icon: <FaTachometerAlt />,
-      label: 'Dashboard'
+      label: 'Dashboard',
     },
     {
       path: '/menu',
       icon: <FaUtensils />,
-      label: 'Quản Lý Thực Đơn'
+      label: 'Quản Lý Thực Đơn',
     },
     {
-      path: '/customers',
-      icon: <FaUsers />,
-      label: 'Quản Lý Khách Hàng'
+      path: '/bookings',
+      icon: <FaCalendarAlt />,
+      label: 'Quản Lý Đặt Bàn',
     },
     {
       path: '/employees',
       icon: <FaUserTie />,
-      label: 'Quản Lý Nhân Viên'
+      label: 'Quản Lý Nhân Viên',
     },
     {
       path: '/tables',
       icon: <FaTable />,
       label: 'Quản Lý Bàn',
-      isActive: true // Currently selected item with yellow highlight
     },
     {
-      path: '/orders',
-      icon: <FaClipboardList />,
-      label: 'Quản Lý Đơn Hàng'
+      path: '/customers',
+      icon: <FaUsers />,
+      label: 'Quản Lý Khách Hàng',
     },
     {
       path: '/reports',
       icon: <FaChartBar />,
-      label: 'Báo Cáo'
-    }
+      label: 'Báo Cáo',
+    },
   ];
 
   // Determine which menu to show
-  const menuItems = (isAuthenticated() && isAdmin()) ? adminMenuItems : guestMenuItems;
+  const menuItems =
+    isAuthenticated() && isAdmin() ? adminMenuItems : guestMenuItems;
 
   return (
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="logo">
-          <img 
-            src="/images/logo.png" 
-            alt="Restaurant Logo" 
+          <img
+            src="/images/logo.png"
+            alt="Restaurant Logo"
             className="logo-image"
             onError={(e) => {
               // Fallback if logo image doesn't exist
@@ -99,7 +107,7 @@ const Sidebar = () => {
             <li key={index} className="menu-item">
               <NavLink
                 to={item.path}
-                className={({ isActive }) => 
+                className={({ isActive }) =>
                   `menu-link ${isActive || item.isActive ? 'active' : ''}`
                 }
               >

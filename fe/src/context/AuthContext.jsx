@@ -18,24 +18,33 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    
+
     if (token && userData) {
       try {
-        setUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        console.log('Restored user from localStorage:', parsedUser);
+        setUser(parsedUser);
       } catch (error) {
         console.error('Invalid user data in localStorage:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('user');
       }
     }
-    
+
     setIsLoading(false);
   }, []);
 
+  // Debug user state changes
+  useEffect(() => {
+    console.log('User state changed:', user);
+  }, [user]);
+
   const login = (userData, token) => {
+    console.log('AuthContext.login called with:', userData);
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
+    console.log('User state updated to:', userData);
   };
 
   const logout = () => {
@@ -49,7 +58,16 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAdmin = () => {
-    return user && user.vaitro && user.vaitro.tenvaitro === 'Admin';
+    console.log('isAdmin check:', {
+      user: user,
+      tenvaitro: user?.tenvaitro,
+      mavaitro: user?.mavaitro,
+      result: user?.tenvaitro === 'admin' || user?.mavaitro === 1,
+    });
+
+    if (!user) return null;
+    // Check both tenvaitro and mavaitro for admin
+    return user.tenvaitro === 'admin' || user.mavaitro === 1;
   };
 
   const getToken = () => {
@@ -63,12 +81,8 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated,
     isAdmin,
-    getToken
+    getToken,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

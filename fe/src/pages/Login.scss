@@ -19,7 +19,8 @@
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
-    
+    pointer-events: none; // Prevent background from blocking clicks
+
     &::before {
       content: '';
       position: absolute;
@@ -28,6 +29,7 @@
       right: 0;
       bottom: 0;
       background-color: $login-bg-overlay;
+      pointer-events: none; // Prevent overlay from blocking clicks
     }
   }
 
@@ -44,19 +46,18 @@
     overflow: hidden;
 
     .login-image-panel {
-      width: 625px;
-      height: 875px;
+      flex: 1;
       position: relative;
-      top: 125px;
-      left: 320px;
+      background-color: $bg-secondary;
       border-radius: $border-radius-lg 0 0 $border-radius-lg;
       overflow: hidden;
-      opacity: 0.4;
+      min-height: 400px;
 
       .login-image {
         width: 100%;
         height: 100%;
         object-fit: cover;
+        opacity: 0.8;
       }
     }
 
@@ -67,10 +68,14 @@
       align-items: center;
       justify-content: center;
       padding: $spacing-2xl;
+      position: relative;
+      z-index: 20;
 
       .login-form-container {
         width: 100%;
         max-width: 400px;
+        position: relative;
+        z-index: 20;
 
         .login-title {
           text-align: center;
@@ -95,15 +100,22 @@
         .login-form {
           .form-group {
             margin-bottom: $spacing-xl;
+            position: relative;
+            z-index: 10;
 
             input {
+              width: 100%;
               padding: $spacing-lg $spacing-md;
               font-size: $font-lg;
               border: 2px solid $border-color;
               border-radius: $border-radius-md;
               transition: all $transition-fast;
+              background-color: white;
+              position: relative;
+              z-index: 10;
 
               &:focus {
+                outline: none;
                 border-color: $primary-color;
                 box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
               }
@@ -158,7 +170,7 @@
 
       .login-form-panel {
         padding: $spacing-xl;
-        
+
         .login-form-container {
           .login-title {
             font-size: $font-2xl;

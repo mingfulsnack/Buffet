@@ -1,0 +1,265 @@
+@import '../styles/variables.scss';
+
+.admin-bookings-page {
+  padding: 2rem;
+  background-color: $background-light;
+  min-height: 100vh;
+
+  .page-header {
+    margin-bottom: 2rem;
+
+    h1 {
+      color: $text-dark;
+      font-size: 2rem;
+      font-weight: 600;
+      margin: 0;
+    }
+  }
+
+  .filters-section {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+
+    .search-box {
+      flex: 1;
+      min-width: 300px;
+
+      .search-input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid $border-color;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: $primary-color;
+          box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+        }
+
+        &::placeholder {
+          color: $text-muted;
+        }
+      }
+    }
+
+    .status-filter {
+      .filter-select {
+        padding: 0.75rem 1rem;
+        border: 1px solid $border-color;
+        border-radius: 8px;
+        font-size: 1rem;
+        background-color: white;
+        min-width: 200px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: $primary-color;
+          box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+        }
+      }
+    }
+  }
+
+  .bookings-table-container {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+
+    .no-data {
+      padding: 3rem;
+      text-align: center;
+      color: $text-muted;
+      font-size: 1.1rem;
+    }
+
+    .bookings-table {
+      width: 100%;
+      border-collapse: collapse;
+
+      thead {
+        background-color: $background-gray;
+
+        th {
+          padding: 1rem;
+          text-align: left;
+          font-weight: 600;
+          color: $text-dark;
+          border-bottom: 1px solid $border-color;
+          font-size: 0.9rem;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+      }
+
+      tbody {
+        tr {
+          transition: background-color 0.2s ease;
+
+          &:hover {
+            background-color: rgba($primary-color, 0.05);
+          }
+
+          &:not(:last-child) {
+            border-bottom: 1px solid $border-light;
+          }
+        }
+
+        td {
+          padding: 1rem;
+          vertical-align: middle;
+          font-size: 0.95rem;
+          color: $text-dark;
+        }
+      }
+
+      .status-badge {
+        display: inline-block;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+
+        &.status-pending {
+          background-color: rgba($warning-color, 0.2);
+          color: darken($warning-color, 20%);
+        }
+
+        &.status-confirmed {
+          background-color: rgba($secondary-color, 0.2);
+          color: darken($secondary-color, 20%);
+        }
+
+        &.status-in-use {
+          background-color: rgba($primary-color, 0.2);
+          color: darken($primary-color, 20%);
+        }
+
+        &.status-completed {
+          background-color: rgba($success-color, 0.2);
+          color: darken($success-color, 20%);
+        }
+
+        &.status-cancelled {
+          background-color: rgba($danger-color, 0.2);
+          color: darken($danger-color, 20%);
+        }
+
+        &.status-expired {
+          background-color: rgba($text-muted, 0.2);
+          color: darken($text-muted, 20%);
+        }
+
+        &.status-default {
+          background-color: rgba($text-muted, 0.2);
+          color: $text-muted;
+        }
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+
+        .btn {
+          min-width: auto;
+          padding: 0.4rem 0.8rem;
+          font-size: 0.85rem;
+        }
+      }
+    }
+  }
+
+  .cancel-booking-form {
+    .form-group {
+      margin-bottom: 1.5rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 500;
+        color: $text-dark;
+      }
+
+      textarea {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid $border-color;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 80px;
+        transition: all 0.3s ease;
+
+        &:focus {
+          outline: none;
+          border-color: $primary-color;
+          box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+        }
+
+        &::placeholder {
+          color: $text-muted;
+        }
+      }
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-end;
+      margin-top: 2rem;
+
+      .btn {
+        min-width: 120px;
+      }
+    }
+  }
+
+  // Responsive design
+  @media (max-width: 768px) {
+    padding: 1rem;
+
+    .filters-section {
+      flex-direction: column;
+
+      .search-box {
+        min-width: 100%;
+      }
+    }
+
+    .bookings-table-container {
+      overflow-x: auto;
+
+      .bookings-table {
+        min-width: 800px;
+      }
+    }
+
+    .page-header h1 {
+      font-size: 1.5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 0.5rem;
+
+    .cancel-booking-form {
+      .modal-actions {
+        flex-direction: column;
+
+        .btn {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
