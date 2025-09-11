@@ -56,14 +56,14 @@ class Menu extends BaseModel {
 
     // Nhóm món ăn theo danh mục
     const menuByCategory = {};
-    categories.rows.forEach(category => {
+    categories.rows.forEach((category) => {
       menuByCategory[category.madanhmuc] = {
         ...category,
-        mon_an: []
+        mon_an: [],
       };
     });
 
-    dishes.rows.forEach(dish => {
+    dishes.rows.forEach((dish) => {
       if (menuByCategory[dish.madanhmuc]) {
         menuByCategory[dish.madanhmuc].mon_an.push(dish);
       }
@@ -72,7 +72,7 @@ class Menu extends BaseModel {
     return {
       danh_muc: Object.values(menuByCategory),
       set_buffet: buffetSets.rows,
-      khuyen_mai: promotions.rows
+      khuyen_mai: promotions.rows,
     };
   }
 
@@ -101,26 +101,32 @@ class Menu extends BaseModel {
     }
 
     // Đếm tổng số
-    const countResult = await this.query(`
+    const countResult = await this.query(
+      `
       SELECT COUNT(*) as total 
       FROM ${this.tableName} m 
       JOIN danhmucmonan dm ON m.madanhmuc = dm.madanhmuc
       ${whereClause}
-    `, params);
+    `,
+      params
+    );
     const total = parseInt(countResult.rows[0].total);
 
     // Lấy dữ liệu với phân trang
     const offset = (page - 1) * limit;
     params.push(limit, offset);
 
-    const result = await this.query(`
+    const result = await this.query(
+      `
       SELECT m.*, dm.tendanhmuc
       FROM ${this.tableName} m
       JOIN danhmucmonan dm ON m.madanhmuc = dm.madanhmuc
       ${whereClause}
       ORDER BY dm.tendanhmuc, m.tenmon
       LIMIT $${paramCount + 1} OFFSET $${paramCount + 2}
-    `, params);
+    `,
+      params
+    );
 
     return {
       data: result.rows,
@@ -130,8 +136,8 @@ class Menu extends BaseModel {
         total,
         totalPages: Math.ceil(total / limit),
         hasNext: page < Math.ceil(total / limit),
-        hasPrev: page > 1
-      }
+        hasPrev: page > 1,
+      },
     };
   }
 
@@ -159,27 +165,46 @@ class Menu extends BaseModel {
 
   // Tạo danh mục mới
   async createCategory(data) {
-    const result = await this.query(`
+    const result = await this.query(
+      `
       INSERT INTO danhmucmonan (tendanhmuc, mota)
       VALUES ($1, $2)
       RETURNING *
-    `, [data.tendanhmuc, data.mota]);
+    `,
+      [data.tendanhmuc, data.mota]
+    );
 
     return result.rows[0];
   }
 
-  // Lấy danh sách set buffet
-  async getBuffetSets(trangthai = null) {
-    let whereClause = '';
+  // Lấy danh sách set buffet với filter và search
+  async getBuffetSets(conditions = {}) {
+    let whereClause = 'WHERE 1=1';
     const params = [];
+    let paramCount = 0;
 
-    if (trangthai) {
-      whereClause = 'WHERE s.trangthai = $1';
-      params.push(trangthai);
+    if (conditions.trangthai) {
+      paramCount++;
+      whereClause += ` AND s.trangthai = $${paramCount}`;
+      params.push(conditions.trangthai);
     }
 
-    const result = await this.query(`
+    if (conditions.madanhmuc) {
+      paramCount++;
+      whereClause += ` AND s.madanhmuc = $${paramCount}`;
+      params.push(conditions.madanhmuc);
+    }
+
+    if (conditions.search) {
+      paramCount++;
+      whereClause += ` AND s.tenset ILIKE $${paramCount}`;
+      params.push(`%${conditions.search}%`);
+    }
+
+    const result = await this.query(
+      `
       SELECT s.*, 
+             db.tendanhmuc,
              COALESCE(
                JSON_AGG(
                  JSON_BUILD_OBJECT(
@@ -193,12 +218,15 @@ class Menu extends BaseModel {
                '[]'
              ) as mon_an
       FROM setbuffet s
+      LEFT JOIN danhmucbuffet db ON s.madanhmuc = db.madanhmuc
       LEFT JOIN setbuffet_chitiet sc ON s.maset = sc.maset
       LEFT JOIN ${this.tableName} m ON sc.mamon = m.mamon
       ${whereClause}
-      GROUP BY s.maset, s.tenset, s.dongia, s.thoigian_batdau, s.thoigian_ketthuc, s.mota, s.trangthai, s.image
-      ORDER BY s.dongia
-    `, params);
+      GROUP BY s.maset, s.tenset, s.dongia, s.thoigian_batdau, s.thoigian_ketthuc, s.mota, s.trangthai, s.image, s.madanhmuc, db.tendanhmuc
+      ORDER BY db.tendanhmuc, s.dongia
+    `,
+      params
+    );
 
     return result.rows;
   }
@@ -206,24 +234,47 @@ class Menu extends BaseModel {
   // Tạo set buffet mới
   async createBuffetSet(data) {
     return await this.transaction(async (client) => {
-      const { tenset, dongia, thoigian_batdau, thoigian_ketthuc, mota, mon_an, image } = data;
+      const {
+        tenset,
+        dongia,
+        thoigian_batdau,
+        thoigian_ketthuc,
+        mota,
+        mon_an,
+        image,
+        madanhmuc,
+      } = data;
 
       // Tạo set buffet
-      const setResult = await client.query(`
-        INSERT INTO setbuffet (tenset, dongia, thoigian_batdau, thoigian_ketthuc, mota, trangthai, image)
-        VALUES ($1, $2, $3, $4, $5, 'HoatDong', $6)
+      const setResult = await client.query(
+        `
+        INSERT INTO setbuffet (tenset, dongia, thoigian_batdau, thoigian_ketthuc, mota, trangthai, image, madanhmuc)
+        VALUES ($1, $2, $3, $4, $5, 'HoatDong', $6, $7)
         RETURNING *
-      `, [tenset, dongia, thoigian_batdau, thoigian_ketthuc, mota, image]);
+      `,
+        [
+          tenset,
+          dongia,
+          thoigian_batdau,
+          thoigian_ketthuc,
+          mota,
+          image,
+          madanhmuc,
+        ]
+      );
 
       const buffetSet = setResult.rows[0];
 
       // Thêm món ăn vào set
       if (mon_an && mon_an.length > 0) {
         for (const dish of mon_an) {
-          await client.query(`
+          await client.query(
+            `
             INSERT INTO setbuffet_chitiet (maset, mamon, soluong)
             VALUES ($1, $2, $3)
-          `, [buffetSet.maset, dish.mamon, dish.soluong || 1]);
+          `,
+            [buffetSet.maset, dish.mamon, dish.soluong || 1]
+          );
         }
       }
 
@@ -234,16 +285,30 @@ class Menu extends BaseModel {
   // Cập nhật set buffet
   async updateBuffetSet(id, data) {
     return await this.transaction(async (client) => {
-      const { tenset, dongia, thoigian_batdau, thoigian_ketthuc, mota, trangthai, mon_an, image } = data;
+      const {
+        tenset,
+        dongia,
+        thoigian_batdau,
+        thoigian_ketthuc,
+        mota,
+        trangthai,
+        mon_an,
+        image,
+        madanhmuc,
+      } = data;
 
       // Kiểm tra set có tồn tại
-      const existing = await client.query('SELECT * FROM setbuffet WHERE maset = $1', [id]);
+      const existing = await client.query(
+        'SELECT * FROM setbuffet WHERE maset = $1',
+        [id]
+      );
       if (existing.rows.length === 0) {
         throw new Error('Không tìm thấy set buffet');
       }
 
       // Cập nhật thông tin set
-      const result = await client.query(`
+      const result = await client.query(
+        `
         UPDATE setbuffet 
         SET tenset = COALESCE($1, tenset),
             dongia = COALESCE($2, dongia),
@@ -251,27 +316,120 @@ class Menu extends BaseModel {
             thoigian_ketthuc = COALESCE($4, thoigian_ketthuc),
             mota = COALESCE($5, mota),
             trangthai = COALESCE($6, trangthai),
-            image = COALESCE($7, image)
-        WHERE maset = $8
+            image = COALESCE($7, image),
+            madanhmuc = COALESCE($8, madanhmuc)
+        WHERE maset = $9
         RETURNING *
-      `, [tenset, dongia, thoigian_batdau, thoigian_ketthuc, mota, trangthai, image, id]);
+      `,
+        [
+          tenset,
+          dongia,
+          thoigian_batdau,
+          thoigian_ketthuc,
+          mota,
+          trangthai,
+          image,
+          madanhmuc,
+          id,
+        ]
+      );
 
       // Cập nhật món ăn nếu có
       if (mon_an) {
         // Xóa món ăn cũ
-        await client.query('DELETE FROM setbuffet_chitiet WHERE maset = $1', [id]);
-        
+        await client.query('DELETE FROM setbuffet_chitiet WHERE maset = $1', [
+          id,
+        ]);
+
         // Thêm món ăn mới
         for (const dish of mon_an) {
-          await client.query(`
+          await client.query(
+            `
             INSERT INTO setbuffet_chitiet (maset, mamon, soluong)
             VALUES ($1, $2, $3)
-          `, [id, dish.mamon, dish.soluong || 1]);
+          `,
+            [id, dish.mamon, dish.soluong || 1]
+          );
         }
       }
 
       return result.rows[0];
     });
+  }
+
+  // Lấy danh sách danh mục buffet
+  async getBuffetCategories() {
+    const result = await this.query(`
+      SELECT db.*, COUNT(s.maset) as so_set
+      FROM danhmucbuffet db
+      LEFT JOIN setbuffet s ON db.madanhmuc = s.madanhmuc
+      GROUP BY db.madanhmuc, db.tendanhmuc, db.mota
+      ORDER BY db.tendanhmuc
+    `);
+
+    return result.rows;
+  }
+
+  // Tạo danh mục buffet mới
+  async createBuffetCategory(data) {
+    const result = await this.query(
+      `
+      INSERT INTO danhmucbuffet (tendanhmuc, mota)
+      VALUES ($1, $2)
+      RETURNING *
+    `,
+      [data.tendanhmuc, data.mota]
+    );
+
+    return result.rows[0];
+  }
+
+  // Cập nhật danh mục buffet
+  async updateBuffetCategory(id, data) {
+    const result = await this.query(
+      `
+      UPDATE danhmucbuffet 
+      SET tendanhmuc = COALESCE($1, tendanhmuc),
+          mota = COALESCE($2, mota)
+      WHERE madanhmuc = $3
+      RETURNING *
+    `,
+      [data.tendanhmuc, data.mota, id]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Không tìm thấy danh mục buffet');
+    }
+
+    return result.rows[0];
+  }
+
+  // Xóa danh mục buffet
+  async deleteBuffetCategory(id) {
+    // Kiểm tra có set buffet nào đang sử dụng không
+    const checkResult = await this.query(
+      'SELECT COUNT(*) as count FROM setbuffet WHERE madanhmuc = $1',
+      [id]
+    );
+
+    if (parseInt(checkResult.rows[0].count) > 0) {
+      throw new Error('Không thể xóa danh mục vì đang có set buffet sử dụng');
+    }
+
+    const result = await this.query(
+      `
+      DELETE FROM danhmucbuffet 
+      WHERE madanhmuc = $1
+      RETURNING *
+    `,
+      [id]
+    );
+
+    if (result.rows.length === 0) {
+      throw new Error('Không tìm thấy danh mục buffet');
+    }
+
+    return result.rows[0];
   }
 
   // Lấy danh sách khuyến mãi
@@ -284,7 +442,8 @@ class Menu extends BaseModel {
       params.push(isActive);
     }
 
-    const result = await this.query(`
+    const result = await this.query(
+      `
       SELECT km.*,
              COALESCE(
                JSON_AGG(
@@ -301,7 +460,9 @@ class Menu extends BaseModel {
       GROUP BY km.makm, km.tenkm, km.loai_km, km.giatri, km.ngay_batdau, 
                km.ngay_ketthuc, km.dieu_kien, km.is_active
       ORDER BY km.ngay_ketthuc DESC
-    `, params);
+    `,
+      params
+    );
 
     return result.rows;
   }
@@ -309,17 +470,34 @@ class Menu extends BaseModel {
   // Tạo khuyến mãi mới
   async createPromotion(data) {
     return await this.transaction(async (client) => {
-      const { 
-        tenkm, loai_km, giatri, ngay_batdau, ngay_ketthuc, 
-        dieu_kien, is_active, ap_dung 
+      const {
+        tenkm,
+        loai_km,
+        giatri,
+        ngay_batdau,
+        ngay_ketthuc,
+        dieu_kien,
+        is_active,
+        ap_dung,
       } = data;
 
       // Tạo khuyến mãi
-      const result = await client.query(`
+      const result = await client.query(
+        `
         INSERT INTO khuyenmai (tenkm, loai_km, giatri, ngay_batdau, ngay_ketthuc, dieu_kien, is_active)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING *
-      `, [tenkm, loai_km, giatri, ngay_batdau, ngay_ketthuc, dieu_kien, is_active]);
+      `,
+        [
+          tenkm,
+          loai_km,
+          giatri,
+          ngay_batdau,
+          ngay_ketthuc,
+          dieu_kien,
+          is_active,
+        ]
+      );
 
       const promotion = result.rows[0];
 
@@ -327,10 +505,13 @@ class Menu extends BaseModel {
       if (ap_dung && ap_dung.length > 0) {
         for (const item of ap_dung) {
           const objectId = item.object_id || 0;
-          await client.query(`
+          await client.query(
+            `
             INSERT INTO khuyenmai_apdung (makm, object_type, object_id)
             VALUES ($1, $2, $3)
-          `, [promotion.makm, item.object_type, objectId]);
+          `,
+            [promotion.makm, item.object_type, objectId]
+          );
         }
       }
 
@@ -340,7 +521,8 @@ class Menu extends BaseModel {
 
   // Báo cáo món ăn phổ biến
   async getPopularDishes(fromDate, toDate) {
-    const result = await this.query(`
+    const result = await this.query(
+      `
       SELECT 
         m.mamon,
         m.tenmon,
@@ -358,14 +540,17 @@ class Menu extends BaseModel {
       GROUP BY m.mamon, m.tenmon, dm.tendanhmuc, m.dongia
       ORDER BY tong_so_luong DESC
       LIMIT 20
-    `, [fromDate, toDate]);
+    `,
+      [fromDate, toDate]
+    );
 
     return result.rows;
   }
 
   // Thống kê theo danh mục
   async getCategoryStats(fromDate, toDate) {
-    const result = await this.query(`
+    const result = await this.query(
+      `
       SELECT 
         dm.tendanhmuc,
         COUNT(DISTINCT m.mamon) as so_mon,
@@ -379,7 +564,9 @@ class Menu extends BaseModel {
       WHERE p.thoigian_dat >= $1 AND p.thoigian_dat <= $2
       GROUP BY dm.madanhmuc, dm.tendanhmuc
       ORDER BY doanh_thu DESC
-    `, [fromDate, toDate]);
+    `,
+      [fromDate, toDate]
+    );
 
     return result.rows;
   }

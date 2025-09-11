@@ -73,6 +73,14 @@ export const menuAPI = {
   updateBuffetSet: (id, data) => api.put(`/menu/buffet-sets/${id}`, data),
   deleteBuffetSet: (id) => api.delete(`/menu/buffet-sets/${id}`),
   getCategories: () => api.get('/menu/categories'),
+  createCategory: (data) => api.post('/menu/categories', data),
+  updateCategory: (id, data) => api.put(`/menu/categories/${id}`, data),
+  deleteCategory: (id) => api.delete(`/menu/categories/${id}`),
+  getBuffetCategories: () => api.get('/menu/buffet-categories'),
+  createBuffetCategory: (data) => api.post('/menu/buffet-categories', data),
+  updateBuffetCategory: (id, data) =>
+    api.put(`/menu/buffet-categories/${id}`, data),
+  deleteBuffetCategory: (id) => api.delete(`/menu/buffet-categories/${id}`),
   getPromotions: (params) => api.get('/menu/promotions', { params }),
 };
 
@@ -118,9 +126,8 @@ export const bookingAPI = {
   updateBooking: (id, data) => api.put(`/bookings/${id}`, data),
   deleteBooking: (id) => api.delete(`/bookings/${id}`),
   getBooking: (id) => api.get(`/bookings/${id}`),
-  confirmBooking: (id) => api.patch(`/bookings/${id}/confirm`),
-  cancelBooking: (id, reason) =>
-    api.patch(`/bookings/${id}/cancel`, { reason }),
+  confirmBooking: (id) => api.put(`/bookings/${id}/confirm`),
+  cancelBooking: (id, reason) => api.put(`/bookings/${id}/cancel`, { reason }),
   checkIn: (id) => api.patch(`/bookings/${id}/checkin`),
   checkOut: (id) => api.patch(`/bookings/${id}/checkout`),
 

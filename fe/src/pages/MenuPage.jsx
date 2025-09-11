@@ -6,6 +6,7 @@ import Button from '../components/Button';
 import Modal from '../components/Modal';
 import DishForm from '../components/menu/DishForm';
 import CategoryForm from '../components/menu/CategoryForm';
+import BuffetSetForm from '../components/menu/BuffetSetForm';
 import './MenuPage.scss';
 
 const MenuPage = () => {
@@ -14,9 +15,12 @@ const MenuPage = () => {
   const [dishes, setDishes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [buffetSets, setBuffetSets] = useState([]);
+  const [buffetCategories, setBuffetCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [buffetSearchTerm, setBuffetSearchTerm] = useState('');
+  const [selectedBuffetCategory, setSelectedBuffetCategory] = useState('');
 
   // Admin states
   const [showModal, setShowModal] = useState(false);
@@ -26,6 +30,18 @@ const MenuPage = () => {
   // Prevent multiple API calls
   const hasLoadedData = useRef(false);
   const isAdminUser = isAuthenticated() && isAdmin();
+
+  // Handle tab change to reset search/filter
+  const handleTabChange = (tabName) => {
+    setActiveTab(tabName);
+    if (tabName === 'dishes') {
+      setSearchTerm('');
+      setSelectedCategory('');
+    } else if (tabName === 'buffet-sets') {
+      setBuffetSearchTerm('');
+      setSelectedBuffetCategory('');
+    }
+  };
 
   // These functions are no longer needed since we load all data from public menu
 
@@ -59,7 +75,34 @@ const MenuPage = () => {
 
           setDishes(allDishes);
           setCategories(publicData.danh_muc || []);
-          setBuffetSets(publicData.set_buffet || []);
+
+          // Load buffet categories and detailed buffet sets if admin
+          if (isAdminUser) {
+            console.log('Loading admin buffet data...');
+            const [buffetCategoriesResponse, buffetSetsResponse] =
+              await Promise.all([
+                menuAPI.getBuffetCategories(),
+                menuAPI.getBuffetSets(),
+              ]);
+
+            console.log(
+              'Buffet categories response:',
+              buffetCategoriesResponse
+            );
+            console.log('Buffet sets response:', buffetSetsResponse);
+
+            if (buffetCategoriesResponse.data.success) {
+              setBuffetCategories(buffetCategoriesResponse.data.data);
+            }
+
+            if (buffetSetsResponse.data.success) {
+              setBuffetSets(buffetSetsResponse.data.data);
+            } else {
+              setBuffetSets(publicData.set_buffet || []);
+            }
+          } else {
+            setBuffetSets(publicData.set_buffet || []);
+          }
         }
       } catch (error) {
         console.error('Error loading initial data:', error);
@@ -74,7 +117,7 @@ const MenuPage = () => {
     };
 
     loadInitialData();
-  }, []); // Empty dependency array to run only once
+  }, [isAdminUser]); // Include isAdminUser as dependency
 
   // Filter dishes based on search and category
   const filteredDishes = dishes.filter((dish) => {
@@ -85,6 +128,20 @@ const MenuPage = () => {
 
     const matchesCategory =
       !selectedCategory || dish.madanhmuc?.toString() === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
+  // Filter buffet sets based on search and category
+  const filteredBuffetSets = buffetSets.filter((set) => {
+    const matchesSearch =
+      !buffetSearchTerm ||
+      set.tenset.toLowerCase().includes(buffetSearchTerm.toLowerCase()) ||
+      set.mota?.toLowerCase().includes(buffetSearchTerm.toLowerCase());
+
+    const matchesCategory =
+      !selectedBuffetCategory ||
+      set.madanhmuc?.toString() === selectedBuffetCategory;
 
     return matchesSearch && matchesCategory;
   });
@@ -119,11 +176,24 @@ const MenuPage = () => {
       } else if (type === 'buffet') {
         await menuAPI.deleteBuffetSet(id);
         setBuffetSets((prev) => prev.filter((set) => set.maset !== id));
+      } else if (type === 'category') {
+        await menuAPI.deleteCategory(id);
+        setCategories((prev) => prev.filter((cat) => cat.madanhmuc !== id));
+        // Reset selected category if it was deleted
+        if (selectedCategory === id.toString()) {
+          setSelectedCategory('');
+        }
       }
     } catch (error) {
       console.error(`Error deleting ${type}:`, error);
       alert(
-        `Có lỗi xảy ra khi xóa ${type === 'dish' ? 'món ăn' : 'set buffet'}`
+        `Có lỗi xảy ra khi xóa ${
+          type === 'dish'
+            ? 'món ăn'
+            : type === 'buffet'
+            ? 'set buffet'
+            : 'danh mục'
+        }`
       );
     }
   };
@@ -134,7 +204,7 @@ const MenuPage = () => {
     setEditingItem(null);
   };
 
-  const handleSaveSuccess = (savedItem) => {
+  const handleSaveSuccess = async (savedItem) => {
     if (modalType === 'dish') {
       if (editingItem) {
         setDishes((prev) =>
@@ -146,12 +216,14 @@ const MenuPage = () => {
         setDishes((prev) => [...prev, savedItem]);
       }
     } else if (modalType === 'buffet') {
-      if (editingItem) {
-        setBuffetSets((prev) =>
-          prev.map((set) => (set.maset === savedItem.maset ? savedItem : set))
-        );
-      } else {
-        setBuffetSets((prev) => [...prev, savedItem]);
+      // Reload buffet sets to get updated data with category info
+      try {
+        const response = await menuAPI.getBuffetSets();
+        if (response.data.success) {
+          setBuffetSets(response.data.data);
+        }
+      } catch (error) {
+        console.error('Error reloading buffet sets:', error);
       }
     } else if (modalType === 'category') {
       if (editingItem) {
@@ -177,11 +249,15 @@ const MenuPage = () => {
         <h1>{isAdminUser ? 'Quản lý thực đơn' : 'Thực đơn nhà hàng'}</h1>
         {isAdminUser && (
           <div className="admin-actions">
-            <Button variant="primary" onClick={() => handleAddItem('category')}>
+            <Button
+              className="themcate"
+              variant="primary"
+              onClick={() => handleAddItem('category')}
+            >
               Thêm danh mục
             </Button>
             <Button
-              variant="primary"
+              className="theman"
               onClick={() =>
                 handleAddItem(activeTab === 'dishes' ? 'dish' : 'buffet')
               }
@@ -195,7 +271,7 @@ const MenuPage = () => {
       <div className="menu-tabs">
         <button
           className={`tab-button ${activeTab === 'dishes' ? 'active' : ''}`}
-          onClick={() => setActiveTab('dishes')}
+          onClick={() => handleTabChange('dishes')}
         >
           Món ăn ({filteredDishes.length})
         </button>
@@ -203,9 +279,10 @@ const MenuPage = () => {
           className={`tab-button ${
             activeTab === 'buffet-sets' ? 'active' : ''
           }`}
-          onClick={() => setActiveTab('buffet-sets')}
+          onClick={() => handleTabChange('buffet-sets')}
         >
-          Set buffet ({buffetSets.length})
+          Set buffet (
+          {isAdminUser ? filteredBuffetSets.length : buffetSets.length})
         </button>
       </div>
 
@@ -295,12 +372,37 @@ const MenuPage = () => {
 
       {activeTab === 'buffet-sets' && (
         <div className="buffet-sets-section">
+          {isAdminUser && (
+            <div className="filters">
+              <div className="search-box">
+                <input
+                  type="text"
+                  placeholder="Tìm kiếm set buffet..."
+                  value={buffetSearchTerm}
+                  onChange={(e) => setBuffetSearchTerm(e.target.value)}
+                />
+              </div>
+              <select
+                value={selectedBuffetCategory}
+                onChange={(e) => setSelectedBuffetCategory(e.target.value)}
+              >
+                <option value="">Tất cả danh mục</option>
+                {buffetCategories.map((category) => (
+                  <option key={category.madanhmuc} value={category.madanhmuc}>
+                    {category.tendanhmuc}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           <div className="buffet-sets-table">
             <table>
               <thead>
                 <tr>
                   <th>Hình ảnh</th>
                   <th>Tên set</th>
+                  {isAdminUser && <th>Danh mục</th>}
                   <th>Giá</th>
                   <th>Thời gian phục vụ</th>
                   <th>Mô tả</th>
@@ -308,7 +410,7 @@ const MenuPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {buffetSets.map((set) => (
+                {filteredBuffetSets.map((set) => (
                   <tr key={set.maset}>
                     <td className="set-image-cell">
                       {set.image ? (
@@ -322,6 +424,9 @@ const MenuPage = () => {
                       )}
                     </td>
                     <td className="set-name">{set.tenset}</td>
+                    {isAdminUser && (
+                      <td className="set-category">{set.tendanhmuc || '-'}</td>
+                    )}
                     <td className="set-price">{formatPrice(set.dongia)}</td>
                     <td className="set-time">
                       {set.thoigian_batdau && set.thoigian_ketthuc
@@ -352,9 +457,11 @@ const MenuPage = () => {
               </tbody>
             </table>
 
-            {buffetSets.length === 0 && (
+            {filteredBuffetSets.length === 0 && (
               <div className="no-buffet-sets">
-                Hiện tại chưa có set buffet nào
+                {buffetSearchTerm || selectedBuffetCategory
+                  ? 'Không tìm thấy set buffet nào phù hợp'
+                  : 'Hiện tại chưa có set buffet nào'}
               </div>
             )}
           </div>
@@ -400,12 +507,12 @@ const MenuPage = () => {
             />
           )}
           {modalType === 'buffet' && (
-            <div>
-              <p>Form set buffet sẽ được thêm sau</p>
-              <Button variant="secondary" onClick={handleModalClose}>
-                Đóng
-              </Button>
-            </div>
+            <BuffetSetForm
+              editingSet={editingItem}
+              buffetCategories={buffetCategories}
+              onSave={handleSaveSuccess}
+              onCancel={handleModalClose}
+            />
           )}
         </Modal>
       )}

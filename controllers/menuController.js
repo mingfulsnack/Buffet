@@ -7,7 +7,6 @@ const getPublicMenu = async (req, res) => {
     const menu = await Menu.getPublicMenu();
 
     res.json(formatResponse(true, menu, 'Lấy thực đơn thành công'));
-
   } catch (error) {
     console.error('Get public menu error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -26,13 +25,11 @@ const getDishes = async (req, res) => {
 
     const result = await Menu.findAllWithCategory(conditions, page, limit);
 
-    res.json(formatResponse(
-      true,
-      result.data,
-      'Lấy danh sách món ăn thành công',
-      { pagination: result.pagination }
-    ));
-
+    res.json(
+      formatResponse(true, result.data, 'Lấy danh sách món ăn thành công', {
+        pagination: result.pagination,
+      })
+    );
   } catch (error) {
     console.error('Get dishes error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -42,7 +39,8 @@ const getDishes = async (req, res) => {
 // Tạo món ăn mới
 const createDish = async (req, res) => {
   try {
-    const { tenmon, madanhmuc, dongia, trangthai, is_addon, ghichu, image } = req.body;
+    const { tenmon, madanhmuc, dongia, trangthai, is_addon, ghichu, image } =
+      req.body;
 
     const dishData = {
       tenmon,
@@ -51,13 +49,12 @@ const createDish = async (req, res) => {
       trangthai: trangthai || 'Con',
       is_addon: is_addon || false,
       ghichu,
-      image: image || null
+      image: image || null,
     };
 
     const result = await Menu.create(dishData);
 
     res.status(201).json(formatResponse(true, result, 'Tạo món ăn thành công'));
-
   } catch (error) {
     console.error('Create dish error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -68,7 +65,8 @@ const createDish = async (req, res) => {
 const updateDish = async (req, res) => {
   try {
     const { id } = req.params;
-    const { tenmon, madanhmuc, dongia, trangthai, is_addon, ghichu, image } = req.body;
+    const { tenmon, madanhmuc, dongia, trangthai, is_addon, ghichu, image } =
+      req.body;
 
     // Kiểm tra món ăn có tồn tại
     const existing = await Menu.findById(id);
@@ -88,7 +86,6 @@ const updateDish = async (req, res) => {
     const result = await Menu.update(id, updateData);
 
     res.json(formatResponse(true, result, 'Cập nhật món ăn thành công'));
-
   } catch (error) {
     console.error('Update dish error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -103,7 +100,11 @@ const deleteDish = async (req, res) => {
     // Kiểm tra món ăn có trong set buffet nào không
     const inBuffetSet = await Menu.isInBuffetSet(id);
     if (inBuffetSet) {
-      return res.status(400).json(formatErrorResponse('Không thể xóa món ăn đang có trong set buffet'));
+      return res
+        .status(400)
+        .json(
+          formatErrorResponse('Không thể xóa món ăn đang có trong set buffet')
+        );
     }
 
     const result = await Menu.delete(id);
@@ -113,7 +114,6 @@ const deleteDish = async (req, res) => {
     }
 
     res.json(formatResponse(true, null, 'Xóa món ăn thành công'));
-
   } catch (error) {
     console.error('Delete dish error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -125,8 +125,9 @@ const getCategories = async (req, res) => {
   try {
     const categories = await Menu.getCategories();
 
-    res.json(formatResponse(true, categories, 'Lấy danh sách danh mục thành công'));
-
+    res.json(
+      formatResponse(true, categories, 'Lấy danh sách danh mục thành công')
+    );
   } catch (error) {
     console.error('Get categories error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -140,8 +141,9 @@ const createCategory = async (req, res) => {
 
     const result = await Menu.createCategory({ tendanhmuc, mota });
 
-    res.status(201).json(formatResponse(true, result, 'Tạo danh mục thành công'));
-
+    res
+      .status(201)
+      .json(formatResponse(true, result, 'Tạo danh mục thành công'));
   } catch (error) {
     console.error('Create category error:', error);
     if (error.code === '23505') {
@@ -155,12 +157,18 @@ const createCategory = async (req, res) => {
 // Lấy danh sách set buffet
 const getBuffetSets = async (req, res) => {
   try {
-    const { trangthai } = req.query;
+    const { trangthai, madanhmuc, search } = req.query;
 
-    const buffetSets = await Menu.getBuffetSets(trangthai);
+    const conditions = {};
+    if (trangthai) conditions.trangthai = trangthai;
+    if (madanhmuc) conditions.madanhmuc = madanhmuc;
+    if (search) conditions.search = search;
 
-    res.json(formatResponse(true, buffetSets, 'Lấy danh sách set buffet thành công'));
+    const buffetSets = await Menu.getBuffetSets(conditions);
 
+    res.json(
+      formatResponse(true, buffetSets, 'Lấy danh sách set buffet thành công')
+    );
   } catch (error) {
     console.error('Get buffet sets error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -170,7 +178,16 @@ const getBuffetSets = async (req, res) => {
 // Tạo set buffet mới
 const createBuffetSet = async (req, res) => {
   try {
-    const { tenset, dongia, thoigian_batdau, thoigian_ketthuc, mota, mon_an, image } = req.body;
+    const {
+      tenset,
+      dongia,
+      thoigian_batdau,
+      thoigian_ketthuc,
+      mota,
+      mon_an,
+      image,
+      madanhmuc,
+    } = req.body;
 
     const buffetSetData = {
       tenset,
@@ -179,13 +196,15 @@ const createBuffetSet = async (req, res) => {
       thoigian_ketthuc,
       mota,
       mon_an,
-      image: image || null
+      image: image || null,
+      madanhmuc,
     };
 
     const buffetSet = await Menu.createBuffetSet(buffetSetData);
 
-    res.status(201).json(formatResponse(true, buffetSet, 'Tạo set buffet thành công'));
-
+    res
+      .status(201)
+      .json(formatResponse(true, buffetSet, 'Tạo set buffet thành công'));
   } catch (error) {
     console.error('Create buffet set error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -196,7 +215,17 @@ const createBuffetSet = async (req, res) => {
 const updateBuffetSet = async (req, res) => {
   try {
     const { id } = req.params;
-    const { tenset, dongia, thoigian_batdau, thoigian_ketthuc, mota, trangthai, mon_an, image } = req.body;
+    const {
+      tenset,
+      dongia,
+      thoigian_batdau,
+      thoigian_ketthuc,
+      mota,
+      trangthai,
+      mon_an,
+      image,
+      madanhmuc,
+    } = req.body;
 
     const updateData = {
       tenset,
@@ -206,13 +235,13 @@ const updateBuffetSet = async (req, res) => {
       mota,
       trangthai,
       mon_an,
-      image
+      image,
+      madanhmuc,
     };
 
     const result = await Menu.updateBuffetSet(id, updateData);
 
     res.json(formatResponse(true, result, 'Cập nhật set buffet thành công'));
-
   } catch (error) {
     console.error('Update buffet set error:', error);
     res.status(500).json(formatErrorResponse(error.message || 'Lỗi server'));
@@ -227,8 +256,9 @@ const getPromotions = async (req, res) => {
     const isActive = is_active !== undefined ? is_active === 'true' : null;
     const promotions = await Menu.getPromotions(isActive);
 
-    res.json(formatResponse(true, promotions, 'Lấy danh sách khuyến mãi thành công'));
-
+    res.json(
+      formatResponse(true, promotions, 'Lấy danh sách khuyến mãi thành công')
+    );
   } catch (error) {
     console.error('Get promotions error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -238,9 +268,15 @@ const getPromotions = async (req, res) => {
 // Tạo khuyến mãi mới
 const createPromotion = async (req, res) => {
   try {
-    const { 
-      tenkm, loai_km, giatri, ngay_batdau, ngay_ketthuc, 
-      dieu_kien, is_active, ap_dung 
+    const {
+      tenkm,
+      loai_km,
+      giatri,
+      ngay_batdau,
+      ngay_ketthuc,
+      dieu_kien,
+      is_active,
+      ap_dung,
     } = req.body;
 
     const promotionData = {
@@ -251,16 +287,103 @@ const createPromotion = async (req, res) => {
       ngay_ketthuc,
       dieu_kien,
       is_active,
-      ap_dung
+      ap_dung,
     };
 
     const promotion = await Menu.createPromotion(promotionData);
 
-    res.status(201).json(formatResponse(true, promotion, 'Tạo khuyến mãi thành công'));
-
+    res
+      .status(201)
+      .json(formatResponse(true, promotion, 'Tạo khuyến mãi thành công'));
   } catch (error) {
     console.error('Create promotion error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
+  }
+};
+
+// Lấy danh sách danh mục buffet
+const getBuffetCategories = async (req, res) => {
+  try {
+    const categories = await Menu.getBuffetCategories();
+
+    res.json(
+      formatResponse(
+        true,
+        categories,
+        'Lấy danh sách danh mục buffet thành công'
+      )
+    );
+  } catch (error) {
+    console.error('Get buffet categories error:', error);
+    res.status(500).json(formatErrorResponse('Lỗi server'));
+  }
+};
+
+// Tạo danh mục buffet mới
+const createBuffetCategory = async (req, res) => {
+  try {
+    const { tendanhmuc, mota } = req.body;
+
+    const categoryData = {
+      tendanhmuc,
+      mota,
+    };
+
+    const category = await Menu.createBuffetCategory(categoryData);
+
+    res
+      .status(201)
+      .json(formatResponse(true, category, 'Tạo danh mục buffet thành công'));
+  } catch (error) {
+    console.error('Create buffet category error:', error);
+    res.status(500).json(formatErrorResponse('Lỗi server'));
+  }
+};
+
+// Cập nhật danh mục buffet
+const updateBuffetCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tendanhmuc, mota } = req.body;
+
+    const updateData = {
+      tendanhmuc,
+      mota,
+    };
+
+    const result = await Menu.updateBuffetCategory(id, updateData);
+
+    res.json(
+      formatResponse(true, result, 'Cập nhật danh mục buffet thành công')
+    );
+  } catch (error) {
+    console.error('Update buffet category error:', error);
+    if (error.message === 'Không tìm thấy danh mục buffet') {
+      res.status(404).json(formatErrorResponse(error.message));
+    } else {
+      res.status(500).json(formatErrorResponse('Lỗi server'));
+    }
+  }
+};
+
+// Xóa danh mục buffet
+const deleteBuffetCategory = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    await Menu.deleteBuffetCategory(id);
+
+    res.json(formatResponse(true, null, 'Xóa danh mục buffet thành công'));
+  } catch (error) {
+    console.error('Delete buffet category error:', error);
+    if (
+      error.message === 'Không tìm thấy danh mục buffet' ||
+      error.message === 'Không thể xóa danh mục vì đang có set buffet sử dụng'
+    ) {
+      res.status(400).json(formatErrorResponse(error.message));
+    } else {
+      res.status(500).json(formatErrorResponse('Lỗi server'));
+    }
   }
 };
 
@@ -275,6 +398,10 @@ module.exports = {
   getBuffetSets,
   createBuffetSet,
   updateBuffetSet,
+  getBuffetCategories,
+  createBuffetCategory,
+  updateBuffetCategory,
+  deleteBuffetCategory,
   getPromotions,
-  createPromotion
+  createPromotion,
 };

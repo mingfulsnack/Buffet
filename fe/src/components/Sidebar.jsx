@@ -86,7 +86,7 @@ const Sidebar = () => {
       <div className="sidebar-header">
         <div className="logo">
           <img
-            src="/images/logo.png"
+            src="/src/assets/logobambam.png"
             alt="Restaurant Logo"
             className="logo-image"
             onError={(e) => {

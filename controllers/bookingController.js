@@ -124,17 +124,22 @@ const cancelBooking = async (req, res) => {
   try {
     const { token } = req.params; // booking_token cho khách hàng
     const { id } = req.params; // maphieu cho admin
-    const { ly_do } = req.body;
+    const { reason } = req.body; // Frontend gửi 'reason', không phải 'ly_do'
     const manv = req.user?.manv; // Có thể null nếu là khách hàng
 
-    const identifier = token || id;
-    if (!identifier) {
+    // Tạo identifier object theo format mà model expect
+    let identifier;
+    if (token) {
+      identifier = { token: token };
+    } else if (id) {
+      identifier = { id: id };
+    } else {
       return res
         .status(400)
         .json(formatErrorResponse('Thiếu thông tin để hủy đặt bàn'));
     }
 
-    const result = await Booking.cancelBooking(identifier, manv, ly_do);
+    const result = await Booking.cancelBooking(identifier, manv, reason);
 
     if (!result) {
       return res

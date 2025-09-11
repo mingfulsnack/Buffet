@@ -30,7 +30,6 @@ const Header = () => {
               <div className="user-info">
                 <FaUser className="user-icon" />
                 <span className="user-name">{user?.hoten || 'User'}</span>
-                <span className="user-role">({user?.vaitro?.tenvaitro || 'Unknown'})</span>
               </div>
               <button 
                 className="btn btn-secondary logout-btn" 

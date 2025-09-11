@@ -70,7 +70,7 @@ const EmployeesPage = () => {
       employee.hoten?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       employee.sodienthoai?.includes(searchTerm) ||
       employee.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      employee.vaitro_ten?.toLowerCase().includes(searchTerm.toLowerCase());
+      employee.tenvaitro?.toLowerCase().includes(searchTerm.toLowerCase());
 
     return matchesSearch;
   });
@@ -236,7 +236,7 @@ const EmployeesPage = () => {
     <div className="employees-page">
       <div className="page-header">
         <h1>Quản lý nhân viên</h1>
-        <Button variant="primary" onClick={handleAddEmployee}>
+        <Button className='themnv' variant="primary" onClick={handleAddEmployee}>
           Thêm nhân viên
         </Button>
       </div>
@@ -280,10 +280,12 @@ const EmployeesPage = () => {
                   <td>{employee.hoten}</td>
                   <td>{employee.sodienthoai || 'N/A'}</td>
                   <td>{employee.email || 'N/A'}</td>
-                  <td>{employee.vaitro_ten || 'N/A'}</td>
+                  <td>{employee.tenvaitro || 'N/A'}</td>
                   <td>{employee.calam || 'N/A'}</td>
                   <td>
-                    {employee.ngay_tao ? formatDate(employee.ngay_tao) : 'N/A'}
+                    {employee.ngayvaolam
+                      ? formatDate(employee.ngayvaolam)
+                      : 'N/A'}
                   </td>
                   <td>
                     <span
@@ -478,6 +480,7 @@ const EmployeesPage = () => {
               Hủy
             </Button>
             <Button
+              className='themnvmodal'
               variant="primary"
               onClick={handleSubmit}
               disabled={submitting}

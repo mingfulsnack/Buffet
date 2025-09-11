@@ -19,7 +19,22 @@
       font-size: 2rem;
       font-weight: 700;
     }
+    .themcate {
+      background-color: #ffac1c;
+      color: white;
 
+      &:hover {
+        background-color: darken(#ffac1c, 10%) !important;
+      }
+    }
+    .theman {
+      background-color: #ffac1c;
+      color: white;
+
+      &:hover {
+        background-color: darken(#ffac1c, 10%) !important;
+      }
+    }
     .admin-actions {
       display: flex;
       gap: 1rem;
@@ -67,7 +82,7 @@
       }
 
       &.active {
-        background-color: #3b82f6;
+        background-color: #ffac1c;
         color: white;
         box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
       }
@@ -103,8 +118,8 @@
 
         &:focus {
           outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          border-color: #ffac1c;
+          box-shadow: 0 0 0 1px #ffac1c;
         }
       }
 
@@ -119,8 +134,8 @@
 
         &:focus {
           outline: none;
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          border-color: #ffac1c;
+          box-shadow: 0 0 0 1px #ffac1c;
         }
       }
 
@@ -402,6 +417,52 @@
 
   // Buffet Sets Section
   .buffet-sets-section {
+    .filters {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+      .search-box input {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+
+        &:focus {
+          outline: none;
+          border-color: #ffac1c;
+          box-shadow: 0 0 0 1px #ffac1c;
+        }
+      }
+
+      select {
+        padding: 0.75rem 1rem;
+        border: 2px solid #e5e7eb;
+        border-radius: 8px;
+        font-size: 1rem;
+        background: white;
+        cursor: pointer;
+        transition: border-color 0.2s;
+
+        &:focus {
+          outline: none;
+          border-color: #ffac1c;
+          box-shadow: 0 0 0 1px #ffac1c;
+        }
+      }
+
+      @media (max-width: 768px) {
+        grid-template-columns: 1fr;
+      }
+    }
+
     .buffet-sets-table {
       background: white;
       border-radius: 12px;

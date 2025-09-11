@@ -36,8 +36,8 @@
 
         &:focus {
           outline: none;
-          border-color: $primary-color;
-          box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+          border-color: #FFAC1C;
+          box-shadow: 0 0 0 1px #FFAC1C;
         }
 
         &::placeholder {
@@ -59,8 +59,8 @@
 
         &:focus {
           outline: none;
-          border-color: $primary-color;
-          box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+          border-color: #FFAC1C;
+          box-shadow: 0 0 0 1px #FFAC1C;
         }
       }
     }

@@ -27,6 +27,11 @@
       align-items: center;
 
       .login-btn {
+        background-color: #FFAC1C;
+        border-color: #FFAC1C;
+        &:hover {
+            background-color: darken(#FFAC1C, 10%) !important;
+          }
         display: flex;
         align-items: center;
         gap: $spacing-sm;
@@ -64,6 +69,13 @@
         }
 
         .logout-btn {
+          background-color: #FFAC1C;
+          border-color: #FFAC1C;
+
+          &:hover {
+            background-color: darken(#FFAC1C, 10%) !important;
+          }
+
           display: flex;
           align-items: center;
           gap: $spacing-sm;
