@@ -41,12 +41,9 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    // Only redirect to login on 401 (Unauthorized), not on other errors like 429
+    // Only log 401 errors, don't clear localStorage here to avoid conflicts
     if (error.response?.status === 401) {
-      // Token expired or invalid
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      console.log('401 Unauthorized - token may be expired');
     }
     // For other errors (like 429 rate limit), just reject without redirect
     return Promise.reject(error);

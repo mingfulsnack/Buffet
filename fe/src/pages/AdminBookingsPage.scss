@@ -1,4 +1,5 @@
-@import '../styles/variables.scss';
+@use '../styles/variables.scss' as *;
+@use 'sass:color';
 
 .admin-bookings-page {
   padding: 2rem;
@@ -130,32 +131,32 @@
 
         &.status-pending {
           background-color: rgba($warning-color, 0.2);
-          color: darken($warning-color, 20%);
+          color: color.adjust($warning-color, $lightness: -20%);
         }
 
         &.status-confirmed {
           background-color: rgba($secondary-color, 0.2);
-          color: darken($secondary-color, 20%);
+          color: color.adjust($secondary-color, $lightness: -20%);
         }
 
         &.status-in-use {
           background-color: rgba($primary-color, 0.2);
-          color: darken($primary-color, 20%);
+          color: color.adjust($primary-color, $lightness: -20%);
         }
 
         &.status-completed {
           background-color: rgba($success-color, 0.2);
-          color: darken($success-color, 20%);
+          color: color.adjust($success-color, $lightness: -20%);
         }
 
         &.status-cancelled {
           background-color: rgba($danger-color, 0.2);
-          color: darken($danger-color, 20%);
+          color: color.adjust($danger-color, $lightness: -20%);
         }
 
         &.status-expired {
           background-color: rgba($text-muted, 0.2);
-          color: darken($text-muted, 20%);
+          color: color.adjust($text-muted, $lightness: -20%);
         }
 
         &.status-default {

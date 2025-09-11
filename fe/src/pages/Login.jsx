@@ -61,16 +61,20 @@ const Login = () => {
 
   return (
     <div className="login-page">
-      {/* Background image will be added here */}
+      {/* Background image */}
       <div className="login-background">
-        {/* You will add background image here */}
+        <img
+          src="src/assets/loginpage.png"
+          alt="Restaurant Background"
+          className="background-image"
+        />
       </div>
 
       <div className="login-container">
         {/* Left panel with image */}
         <div className="login-image-panel">
           <img
-            src="/images/login-image.jpg"
+            src="src/assets/logidmid.png"
             alt="Restaurant"
             className="login-image"
             onError={(e) => {
@@ -117,7 +121,7 @@ const Login = () => {
                 className="btn btn-primary login-submit-btn"
                 disabled={isLoading}
               >
-                {isLoading ? 'Đang đăng nhập...' : 'LOGIN'}
+                {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
               </button>
             </form>
           </div>

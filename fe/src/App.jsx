@@ -8,9 +8,15 @@ import {
 import { AuthProvider, useAuth } from './context/AuthContext';
 import AppLayout from './layouts/AppLayout';
 import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import MenuPage from './pages/MenuPage';
+
+// User pages
+import UserDashboard from './pages/user/Dashboard';
+import UserMenuPage from './pages/user/MenuPage';
 import BookingPage from './pages/BookingPage';
+
+// Admin pages
+import AdminDashboard from './pages/Dashboard';
+import AdminMenuPage from './pages/admin/AdminMenuPage';
 import TablesPage from './pages/TablesPage';
 import AdminBookingsPage from './pages/AdminBookingsPage';
 import EmployeesPage from './pages/EmployeesPage';
@@ -77,25 +83,32 @@ function App() {
           {/* Public login route */}
           <Route path="/login" element={<Login />} />
 
-          {/* Public routes with AppLayout (menu, booking accessible to all) */}
+          {/* All routes wrapped in AppLayout */}
           <Route path="/" element={<AppLayout />}>
-            <Route index element={<MenuPage />} />
-            <Route path="menu" element={<MenuPage />} />
+            {/* Public routes (user dashboard and menu) */}
+            <Route index element={<UserDashboard />} />
+            <Route path="menu" element={<UserMenuPage />} />
             <Route path="booking" element={<BookingPage />} />
 
-            {/* Admin protected routes */}
+            {/* Admin-only routes */}
             <Route
-              path="dashboard"
+              path="admin"
               element={
-                <ProtectedRoute>
-                  <Dashboard />
+                <ProtectedRoute adminOnly={true}>
+                  <AdminDashboard />
                 </ProtectedRoute>
               }
             />
-
-            {/* Admin only routes */}
             <Route
-              path="bookings"
+              path="admin/menu"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <AdminMenuPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="admin/bookings"
               element={
                 <ProtectedRoute adminOnly={true}>
                   <AdminBookingsPage />
@@ -103,7 +116,7 @@ function App() {
               }
             />
             <Route
-              path="employees"
+              path="admin/employees"
               element={
                 <ProtectedRoute adminOnly={true}>
                   <EmployeesPage />
@@ -111,7 +124,7 @@ function App() {
               }
             />
             <Route
-              path="tables"
+              path="admin/tables"
               element={
                 <ProtectedRoute adminOnly={true}>
                   <TablesPage />
@@ -119,7 +132,7 @@ function App() {
               }
             />
             <Route
-              path="customers"
+              path="admin/customers"
               element={
                 <ProtectedRoute adminOnly={true}>
                   <div>Customers Page</div>
@@ -127,7 +140,7 @@ function App() {
               }
             />
             <Route
-              path="orders"
+              path="admin/orders"
               element={
                 <ProtectedRoute adminOnly={true}>
                   <div>Orders Page</div>
@@ -135,7 +148,7 @@ function App() {
               }
             />
             <Route
-              path="reports"
+              path="admin/reports"
               element={
                 <ProtectedRoute adminOnly={true}>
                   <div>Reports Page</div>

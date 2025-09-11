@@ -27,6 +27,11 @@ const Sidebar = () => {
   // Menu items for guests (not logged in)
   const guestMenuItems = [
     {
+      path: '/',
+      icon: <FaTachometerAlt />,
+      label: 'Trang chủ',
+    },
+    {
       path: '/menu',
       icon: <FaUtensils />,
       label: 'Thực đơn',
@@ -41,37 +46,37 @@ const Sidebar = () => {
   // Menu items for authenticated admin users
   const adminMenuItems = [
     {
-      path: '/dashboard',
+      path: '/admin',
       icon: <FaTachometerAlt />,
-      label: 'Dashboard',
+      label: 'Admin Dashboard',
     },
     {
-      path: '/menu',
+      path: '/admin/menu',
       icon: <FaUtensils />,
       label: 'Quản Lý Thực Đơn',
     },
     {
-      path: '/bookings',
+      path: '/admin/bookings',
       icon: <FaCalendarAlt />,
       label: 'Quản Lý Đặt Bàn',
     },
     {
-      path: '/employees',
+      path: '/admin/employees',
       icon: <FaUserTie />,
       label: 'Quản Lý Nhân Viên',
     },
     {
-      path: '/tables',
+      path: '/admin/tables',
       icon: <FaTable />,
       label: 'Quản Lý Bàn',
     },
     {
-      path: '/customers',
+      path: '/admin/customers',
       icon: <FaUsers />,
       label: 'Quản Lý Khách Hàng',
     },
     {
-      path: '/reports',
+      path: '/admin/reports',
       icon: <FaChartBar />,
       label: 'Báo Cáo',
     },

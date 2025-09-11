@@ -40,8 +40,13 @@ class Menu extends BaseModel {
       LEFT JOIN setbuffet_chitiet sc ON s.maset = sc.maset
       LEFT JOIN ${this.tableName} m ON sc.mamon = m.mamon
       WHERE s.trangthai = 'HoatDong'
-      GROUP BY s.maset, s.tenset, s.dongia, s.thoigian_batdau, s.thoigian_ketthuc, s.mota, s.trangthai, s.image
+      GROUP BY s.maset, s.tenset, s.dongia, s.thoigian_batdau, s.thoigian_ketthuc, s.mota, s.trangthai, s.image, s.madanhmuc
       ORDER BY s.dongia
+    `);
+
+    // Lấy danh mục buffet
+    const buffetCategories = await this.query(`
+      SELECT * FROM danhmucbuffet ORDER BY tendanhmuc
     `);
 
     // Lấy khuyến mãi đang hoạt động
@@ -72,6 +77,7 @@ class Menu extends BaseModel {
     return {
       danh_muc: Object.values(menuByCategory),
       set_buffet: buffetSets.rows,
+      danh_muc_buffet: buffetCategories.rows,
       khuyen_mai: promotions.rows,
     };
   }

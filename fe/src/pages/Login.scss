@@ -15,11 +15,14 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background-image: url('/images/login-background.jpg');
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
     pointer-events: none; // Prevent background from blocking clicks
+
+    .background-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
 
     &::before {
       content: '';
@@ -30,12 +33,13 @@
       bottom: 0;
       background-color: $login-bg-overlay;
       pointer-events: none; // Prevent overlay from blocking clicks
+      z-index: 1;
     }
   }
 
   .login-container {
     position: relative;
-    z-index: 10;
+    z-index: 20;
     display: flex;
     width: 1000px;
     height: 700px;
@@ -140,6 +144,11 @@
             font-weight: $font-semibold;
             letter-spacing: 1px;
             margin-top: $spacing-lg;
+             background-color: #FFAC1C;
+             border-color: #FFAC1C;
+             &:hover {
+             background-color: color.adjust(#FFAC1C, $lightness: -10%) !important;
+             }
 
             &:disabled {
               background-color: $text-light;
