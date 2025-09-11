@@ -5,6 +5,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cron = require('node-cron');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -12,6 +13,9 @@ const PORT = process.env.PORT || 3000;
 // Import database
 const pool = require('./config/database');
 const { testConnection } = require('./config/database');
+
+// Import services
+const BookingCleanupService = require('./services/bookingCleanupService');
 
 // Import routes
 const authRoutes = require('./routes/auth');
@@ -223,6 +227,35 @@ const startServer = async () => {
 
 // Start the server
 const server = startServer();
+
+// Scheduled jobs
+console.log('🕐 Setting up scheduled jobs...');
+
+// Chạy cleanup hàng ngày lúc 0:00
+cron.schedule(
+  '0 0 * * *',
+  async () => {
+    console.log('🧹 Running daily booking cleanup...');
+    await BookingCleanupService.runDailyCleanup();
+  },
+  {
+    timezone: 'Asia/Ho_Chi_Minh',
+  }
+);
+
+// Cập nhật booking quá hạn mỗi 30 phút
+cron.schedule(
+  '*/30 * * * *',
+  async () => {
+    console.log('⏰ Checking for expired bookings...');
+    await BookingCleanupService.updateExpiredBookings();
+  },
+  {
+    timezone: 'Asia/Ho_Chi_Minh',
+  }
+);
+
+console.log('✅ Scheduled jobs configured');
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

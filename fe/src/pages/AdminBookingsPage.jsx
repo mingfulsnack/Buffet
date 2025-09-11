@@ -110,8 +110,6 @@ const AdminBookingsPage = () => {
     const statusColors = {
       DaDat: 'status-pending',
       DaXacNhan: 'status-confirmed',
-      DangSuDung: 'status-in-use',
-      HoanThanh: 'status-completed',
       DaHuy: 'status-cancelled',
       QuaHan: 'status-expired',
     };
@@ -122,8 +120,6 @@ const AdminBookingsPage = () => {
     const statusTexts = {
       DaDat: 'Đã đặt',
       DaXacNhan: 'Đã xác nhận',
-      DangSuDung: 'Đang sử dụng',
-      HoanThanh: 'Hoàn thành',
       DaHuy: 'Đã hủy',
       QuaHan: 'Quá hạn',
     };
@@ -161,8 +157,6 @@ const AdminBookingsPage = () => {
             <option value="all">Tất cả trạng thái</option>
             <option value="DaDat">Đã đặt</option>
             <option value="DaXacNhan">Đã xác nhận</option>
-            <option value="DangSuDung">Đang sử dụng</option>
-            <option value="HoanThanh">Hoàn thành</option>
             <option value="DaHuy">Đã hủy</option>
             <option value="QuaHan">Quá hạn</option>
           </select>
@@ -216,26 +210,32 @@ const AdminBookingsPage = () => {
                   <td>
                     <div className="action-buttons">
                       {booking.trangthai === 'DaDat' && (
-                        <Button
-                          variant="success"
-                          size="sm"
-                          onClick={() => handleConfirmBooking(booking.maphieu)}
-                        >
-                          Xác nhận
-                        </Button>
+                        <>
+                          <Button
+                            variant="success"
+                            size="sm"
+                            onClick={() =>
+                              handleConfirmBooking(booking.maphieu)
+                            }
+                          >
+                            Xác nhận
+                          </Button>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedBooking(booking);
+                              setShowCancelModal(true);
+                            }}
+                          >
+                            Hủy
+                          </Button>
+                        </>
                       )}
-                      {(booking.trangthai === 'DaDat' ||
-                        booking.trangthai === 'DaXacNhan') && (
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedBooking(booking);
-                            setShowCancelModal(true);
-                          }}
-                        >
-                          Hủy
-                        </Button>
+                      {(booking.trangthai === 'DaXacNhan' ||
+                        booking.trangthai === 'DaHuy' ||
+                        booking.trangthai === 'QuaHan') && (
+                        <span className="no-actions">Không có thao tác</span>
                       )}
                     </div>
                   </td>
