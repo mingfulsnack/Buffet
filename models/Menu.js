@@ -147,13 +147,34 @@ class Menu extends BaseModel {
     };
   }
 
-  // Kiểm tra món ăn có trong set buffet không
-  async isInBuffetSet(id) {
-    const result = await this.query(
-      'SELECT COUNT(*) as count FROM setbuffet_chitiet WHERE mamon = $1',
-      [id]
-    );
-    return parseInt(result.rows[0].count) > 0;
+  // Xóa món ăn (hard delete with cascade)
+  async deleteDish(id) {
+    // Bắt đầu transaction để đảm bảo tính toàn vẹn
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Xóa từ setbuffet_chitiet trước
+      await client.query(
+        'DELETE FROM setbuffet_chitiet WHERE mamon = $1',
+        [id]
+      );
+      
+      // Sau đó xóa từ monan
+      const result = await client.query(
+        `DELETE FROM ${this.tableName} WHERE mamon = $1 RETURNING *`,
+        [id]
+      );
+      
+      await client.query('COMMIT');
+      return result.rows[0] || null;
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   // Lấy danh sách danh mục
@@ -169,15 +190,14 @@ class Menu extends BaseModel {
     return result.rows;
   }
 
-  // Tạo danh mục mới
-  async createCategory(data) {
+  // Tạo danh mục món ăn mới
+  async createCategory(categoryData) {
+    const { tendanhmuc, mota } = categoryData;
+    
     const result = await this.query(
-      `
-      INSERT INTO danhmucmonan (tendanhmuc, mota)
-      VALUES ($1, $2)
-      RETURNING *
-    `,
-      [data.tendanhmuc, data.mota]
+      `INSERT INTO danhmucmonan (tendanhmuc, mota) 
+       VALUES ($1, $2) RETURNING *`,
+      [tendanhmuc, mota]
     );
 
     return result.rows[0];
@@ -408,6 +428,36 @@ class Menu extends BaseModel {
     }
 
     return result.rows[0];
+  }
+
+  // Xóa set buffet (hard delete with cascade)
+  async deleteBuffetSet(id) {
+    // Bắt đầu transaction để đảm bảo tính toàn vẹn
+    const client = await this.pool.connect();
+    try {
+      await client.query('BEGIN');
+      
+      // Xóa từ setbuffet_chitiet trước
+      await client.query(
+        'DELETE FROM setbuffet_chitiet WHERE maset = $1',
+        [id]
+      );
+      
+      // Sau đó xóa từ setbuffet
+      const result = await client.query(
+        'DELETE FROM setbuffet WHERE maset = $1 RETURNING *',
+        [id]
+      );
+      
+      await client.query('COMMIT');
+      return result.rows[0] || null;
+      
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 
   // Xóa danh mục buffet

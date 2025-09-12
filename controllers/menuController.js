@@ -96,18 +96,18 @@ const updateDish = async (req, res) => {
 const deleteDish = async (req, res) => {
   try {
     const { id } = req.params;
+    console.log('Deleting dish with ID:', id);
 
-    // Kiểm tra món ăn có trong set buffet nào không
-    const inBuffetSet = await Menu.isInBuffetSet(id);
-    if (inBuffetSet) {
-      return res
-        .status(400)
-        .json(
-          formatErrorResponse('Không thể xóa món ăn đang có trong set buffet')
-        );
+    // Kiểm tra món ăn có tồn tại không
+    const dish = await Menu.findById(id);
+    if (!dish) {
+      console.log('Dish not found:', id);
+      return res.status(404).json(formatErrorResponse('Không tìm thấy món ăn'));
     }
 
-    const result = await Menu.delete(id);
+    // Xóa món ăn (hard delete with cascade)
+    const result = await Menu.deleteDish(id);
+    console.log('Delete result:', result);
 
     if (!result) {
       return res.status(404).json(formatErrorResponse('Không tìm thấy món ăn'));
@@ -245,6 +245,38 @@ const updateBuffetSet = async (req, res) => {
   } catch (error) {
     console.error('Update buffet set error:', error);
     res.status(500).json(formatErrorResponse(error.message || 'Lỗi server'));
+  }
+};
+
+// Xóa set buffet
+const deleteBuffetSet = async (req, res) => {
+  try {
+    const { id } = req.params;
+    console.log('Deleting buffet set with ID:', id);
+
+    // Kiểm tra set buffet có tồn tại không bằng query trực tiếp
+    const checkResult = await Menu.query(
+      'SELECT * FROM setbuffet WHERE maset = $1',
+      [id]
+    );
+    
+    if (checkResult.rows.length === 0) {
+      console.log('Buffet set not found:', id);
+      return res.status(404).json(formatErrorResponse('Không tìm thấy set buffet'));
+    }
+
+    // Xóa set buffet (hard delete with cascade)
+    const result = await Menu.deleteBuffetSet(id);
+    console.log('Delete buffet set result:', result);
+
+    if (!result) {
+      return res.status(404).json(formatErrorResponse('Không tìm thấy set buffet'));
+    }
+
+    res.json(formatResponse(true, null, 'Xóa set buffet thành công'));
+  } catch (error) {
+    console.error('Delete buffet set error:', error);
+    res.status(500).json(formatErrorResponse('Lỗi server'));
   }
 };
 
@@ -398,6 +430,7 @@ module.exports = {
   getBuffetSets,
   createBuffetSet,
   updateBuffetSet,
+  deleteBuffetSet,
   getBuffetCategories,
   createBuffetCategory,
   updateBuffetCategory,

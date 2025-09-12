@@ -65,6 +65,11 @@ router.put(
   checkRole(['Admin', 'Manager']),
   menuController.updateBuffetSet
 );
+router.delete(
+  '/buffet-sets/:id',
+  checkRole(['Admin', 'Manager']),
+  menuController.deleteBuffetSet
+);
 
 // Quản lý khuyến mãi
 router.get('/promotions', menuController.getPromotions);

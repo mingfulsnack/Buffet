@@ -10,6 +10,14 @@ router.use(authenticateToken);
 // Lấy danh sách bàn
 router.get('/', tableController.getTables);
 
+// Quản lý vùng/khu vực (phải đặt trước /:id)
+router.get('/areas', tableController.getAreas);
+
+router.post('/areas', 
+  checkRole(['Admin', 'Manager']),
+  tableController.createArea
+);
+
 // Lấy chi tiết bàn
 router.get('/:id', tableController.getTableDetail);
 
@@ -36,14 +44,6 @@ router.put('/:id/status',
 router.delete('/:id', 
   checkRole(['Admin', 'Manager']),
   tableController.deleteTable
-);
-
-// Quản lý vùng/khu vực
-router.get('/areas/list', tableController.getAreas);
-
-router.post('/areas', 
-  checkRole(['Admin', 'Manager']),
-  tableController.createArea
 );
 
 module.exports = router;

@@ -107,8 +107,7 @@ export const tableAPI = {
   updateTable: (id, data) => api.put(`/tables/${id}`, data),
   deleteTable: (id) => api.delete(`/tables/${id}`),
   getTable: (id) => api.get(`/tables/${id}`),
-  updateStatus: (id, status) =>
-    api.patch(`/tables/${id}/status`, { trangthai: status }),
+  updateStatus: (id, data) => api.put(`/tables/${id}/status`, data),
   getAreas: () => api.get('/tables/areas'),
 
   // Public table API (no auth required)

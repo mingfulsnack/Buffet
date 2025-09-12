@@ -23,27 +23,30 @@ class Table extends BaseModel {
       params.push(conditions.trangthai);
     }
 
-    const result = await this.query(`
+    const result = await this.query(
+      `
       SELECT b.*, v.tenvung, v.mota as vung_mota
       FROM ${this.tableName} b
       JOIN vung v ON b.mavung = v.mavung
       ${whereClause}
       ORDER BY v.tenvung, b.tenban
-    `, params);
+    `,
+      params
+    );
 
     // Nhóm bàn theo vùng
     const tablesByArea = {};
-    result.rows.forEach(table => {
+    result.rows.forEach((table) => {
       const areaName = table.tenvung;
       if (!tablesByArea[areaName]) {
         tablesByArea[areaName] = {
           mavung: table.mavung,
           tenvung: table.tenvung,
           mota: table.vung_mota,
-          tables: []
+          tables: [],
         };
       }
-      
+
       // Loại bỏ thông tin vùng khỏi bàn
       const { tenvung, vung_mota, ...tableInfo } = table;
       tablesByArea[areaName].tables.push(tableInfo);
@@ -54,12 +57,15 @@ class Table extends BaseModel {
 
   // Lấy chi tiết bàn với lịch sử đặt bàn
   async findByIdWithHistory(id) {
-    const table = await this.query(`
+    const table = await this.query(
+      `
       SELECT b.*, v.tenvung, v.mota as vung_mota
       FROM ${this.tableName} b
       JOIN vung v ON b.mavung = v.mavung
       WHERE b.maban = $1
-    `, [id]);
+    `,
+      [id]
+    );
 
     if (table.rows.length === 0) {
       return null;
@@ -68,7 +74,8 @@ class Table extends BaseModel {
     const tableInfo = table.rows[0];
 
     // Lấy lịch sử đặt bàn gần đây
-    const bookingHistory = await this.query(`
+    const bookingHistory = await this.query(
+      `
       SELECT p.maphieu, p.guest_hoten, p.songuoi, p.thoigian_dat, 
              p.trangthai, kh.hoten as khachhang_hoten
       FROM phieudatban p
@@ -76,7 +83,9 @@ class Table extends BaseModel {
       WHERE p.maban = $1
       ORDER BY p.thoigian_dat DESC
       LIMIT 5
-    `, [id]);
+    `,
+      [id]
+    );
 
     tableInfo.lich_su_dat_ban = bookingHistory.rows;
 
@@ -87,10 +96,9 @@ class Table extends BaseModel {
   async updateStatus(id, trangthai, version, manv) {
     return await this.transaction(async (client) => {
       // Kiểm tra version
-      const current = await client.query(
-        'SELECT * FROM ban WHERE maban = $1',
-        [id]
-      );
+      const current = await client.query('SELECT * FROM ban WHERE maban = $1', [
+        id,
+      ]);
 
       if (current.rows.length === 0) {
         throw new Error('Không tìm thấy bàn');
@@ -99,7 +107,9 @@ class Table extends BaseModel {
       const currentTable = current.rows[0];
 
       if (version && currentTable.version !== version) {
-        throw new Error('Bàn đã được cập nhật bởi người khác. Vui lòng tải lại trang.');
+        throw new Error(
+          'Bàn đã được cập nhật bởi người khác. Vui lòng tải lại trang.'
+        );
       }
 
       // Xử lý logic chuyển trạng thái
@@ -109,7 +119,10 @@ class Table extends BaseModel {
           'UPDATE phieudatban SET trangthai = $1, thoigian_den = NOW() WHERE maban = $2 AND trangthai IN ($3, $4)',
           ['DangSuDung', id, 'DaDat', 'DaXacNhan']
         );
-      } else if (currentTable.trangthai === 'DangSuDung' && trangthai === 'Trong') {
+      } else if (
+        currentTable.trangthai === 'DangSuDung' &&
+        trangthai === 'Trong'
+      ) {
         // Kết thúc sử dụng
         await client.query(
           'UPDATE phieudatban SET trangthai = $1 WHERE maban = $2 AND trangthai = $3',
@@ -118,18 +131,28 @@ class Table extends BaseModel {
       }
 
       // Cập nhật trạng thái bàn
-      const result = await client.query(`
+      const result = await client.query(
+        `
         UPDATE ban 
         SET trangthai = $1, version = version + 1
         WHERE maban = $2
         RETURNING *
-      `, [trangthai, id]);
+      `,
+        [trangthai, id]
+      );
 
       // Ghi log audit
-      await client.query(`
+      await client.query(
+        `
         INSERT INTO auditlog (manv, entity, entity_id, action, noidung)
         VALUES ($1, 'ban', $2, 'update_status', $3)
-      `, [manv, id, `Chuyển trạng thái từ ${currentTable.trangthai} sang ${trangthai}`]);
+      `,
+        [
+          manv,
+          id,
+          `Chuyển trạng thái từ ${currentTable.trangthai} sang ${trangthai}`,
+        ]
+      );
 
       return result.rows[0];
     });
@@ -137,13 +160,16 @@ class Table extends BaseModel {
 
   // Kiểm tra bàn có thể đặt không
   async isAvailable(maban, thoigian_dat) {
-    const result = await this.query(`
+    const result = await this.query(
+      `
       SELECT * FROM phieudatban 
       WHERE maban = $1 
         AND trangthai IN ('DaDat', 'DaXacNhan', 'DangSuDung')
         AND thoigian_dat <= $2 + INTERVAL '2 hours'
         AND thoigian_dat + INTERVAL '2 hours' >= $2
-    `, [maban, thoigian_dat]);
+    `,
+      [maban, thoigian_dat]
+    );
 
     return result.rows.length === 0;
   }
@@ -185,18 +211,22 @@ class Table extends BaseModel {
 
   // Tạo vùng mới
   async createArea(data) {
-    const result = await this.query(`
+    const result = await this.query(
+      `
       INSERT INTO vung (tenvung, mota)
       VALUES ($1, $2)
       RETURNING *
-    `, [data.tenvung, data.mota]);
+    `,
+      [data.tenvung, data.mota]
+    );
 
     return result.rows[0];
   }
 
   // Báo cáo hiệu suất sử dụng bàn
   async getUsageReport(fromDate, toDate) {
-    const result = await this.query(`
+    const result = await this.query(
+      `
       SELECT 
         b.maban,
         b.tenban,
@@ -216,14 +246,17 @@ class Table extends BaseModel {
       LEFT JOIN hoadon hd ON p.maphieu = hd.maphieu
       GROUP BY b.maban, b.tenban, v.tenvung, b.soghe
       ORDER BY so_lan_dat DESC, doanh_thu DESC
-    `, [fromDate, toDate]);
+    `,
+      [fromDate, toDate]
+    );
 
     return result.rows;
   }
 
   // Thống kê theo vùng
   async getAreaStats(fromDate, toDate) {
-    const result = await this.query(`
+    const result = await this.query(
+      `
       SELECT 
         v.tenvung,
         COUNT(DISTINCT b.maban) as so_ban,
@@ -236,7 +269,9 @@ class Table extends BaseModel {
       LEFT JOIN hoadon hd ON p.maphieu = hd.maphieu
       GROUP BY v.mavung, v.tenvung
       ORDER BY doanh_thu DESC
-    `, [fromDate, toDate]);
+    `,
+      [fromDate, toDate]
+    );
 
     return result.rows;
   }
@@ -252,6 +287,22 @@ class Table extends BaseModel {
     `);
 
     return result.rows;
+  }
+
+  // Kiểm tra bàn có đặt chỗ đang hoạt động không
+  async hasActiveBookings(maban) {
+    const result = await this.query(
+      `
+      SELECT COUNT(*) as count
+      FROM datban 
+      WHERE maban = $1 
+      AND trangthai IN ('ChoXacNhan', 'DaXacNhan')
+      AND ngaydat >= CURRENT_DATE
+    `,
+      [maban]
+    );
+
+    return parseInt(result.rows[0].count) > 0;
   }
 }
 

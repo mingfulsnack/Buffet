@@ -81,6 +81,25 @@ class BookingCleanupService {
     }
   }
 
+  // Cleanup booking đã hủy quá 30 phút
+  static async cleanupCancelledBookings() {
+    try {
+      console.log('Cleaning up cancelled bookings (30min+ old)...');
+      const deletedCount = await Booking.cleanupCancelledBookings();
+      
+      return {
+        success: true,
+        deletedCount,
+      };
+    } catch (error) {
+      console.error('Error cleaning up cancelled bookings:', error);
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  }
+
   // Chạy cả hai task cleanup
   static async runDailyCleanup() {
     console.log('=== Starting daily booking cleanup ===');

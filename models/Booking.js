@@ -141,19 +141,6 @@ class Booking extends BaseModel {
       `,
         [booking.rows[0].maphieu, `Đặt bàn online cho ${songuoi} người`]
       );
-
-      // Tạo thông báo
-      await client.query(
-        `
-        INSERT INTO thongbao (maphieu, loai, noidung)
-        VALUES ($1, 'BookingCreated', $2)
-      `,
-        [
-          booking.rows[0].maphieu,
-          `Đặt bàn mới: ${guest_hoten || 'Khách hàng'} - ${songuoi} người`,
-        ]
-      );
-
       console.log('Booking process completed successfully');
       return booking.rows[0];
     });
@@ -315,19 +302,27 @@ class Booking extends BaseModel {
         throw new Error('Chỉ có thể xác nhận đặt bàn ở trạng thái "Đã đặt"');
       }
 
-      // Cập nhật trạng thái
-      await client.query(
-        `UPDATE ${this.tableName} SET trangthai = $1, updated_at = NOW() WHERE maphieu = $2`,
-        ['DaXacNhan', id]
-      );
+      const bookingInfo = booking.rows[0];
 
-      // Ghi log
+      // Cập nhật trạng thái bàn thành đang sử dụng
+      await client.query('UPDATE ban SET trangthai = $1 WHERE maban = $2', [
+        'DangSuDung',
+        bookingInfo.maban,
+      ]);
+
+      // Ghi log cuối cùng
       await client.query(
         `
         INSERT INTO phieudatban_lichsu (maphieu, hanh_dong, noidung, thuchienboi)
-        VALUES ($1, 'Confirmed', 'Xác nhận đặt bàn', $2)
+        VALUES ($1, 'Confirmed', 'Xác nhận đặt bàn - Khách đã đến', $2)
       `,
         [id, manv]
+      );
+
+      // XÓA booking khỏi database - cascade sẽ tự động xóa lịch sử
+      await client.query(
+        `DELETE FROM ${this.tableName} WHERE maphieu = $1`,
+        [id]
       );
 
       return true;
@@ -375,25 +370,25 @@ class Booking extends BaseModel {
         throw new Error('Đã quá thời hạn hủy đặt bàn');
       }
 
-      // Cập nhật trạng thái đặt bàn
-      await client.query(
-        `UPDATE ${this.tableName} SET trangthai = $1, thoigian_huy = NOW(), updated_at = NOW() WHERE maphieu = $2`,
-        ['DaHuy', bookingInfo.maphieu]
-      );
-
       // Cập nhật trạng thái bàn về trống
       await client.query('UPDATE ban SET trangthai = $1 WHERE maban = $2', [
         'Trong',
         bookingInfo.maban,
       ]);
 
-      // Ghi log
+      // Ghi log trước khi xóa
       await client.query(
         `
         INSERT INTO phieudatban_lichsu (maphieu, hanh_dong, noidung, thuchienboi)
         VALUES ($1, 'Cancelled', $2, $3)
       `,
         [bookingInfo.maphieu, reason || 'Hủy đặt bàn', manv]
+      );
+
+      // Đánh dấu thời gian hủy và đặt lịch xóa sau 30 phút
+      await client.query(
+        `UPDATE ${this.tableName} SET trangthai = $1, thoigian_huy = NOW(), auto_delete_at = NOW() + INTERVAL '30 minutes', updated_at = NOW() WHERE maphieu = $2`,
+        ['DaHuy', bookingInfo.maphieu]
       );
 
       return true;
@@ -493,6 +488,26 @@ class Booking extends BaseModel {
     );
 
     return result.rows[0];
+  }
+
+  // Cleanup booking đã hủy quá 30 phút
+  async cleanupCancelledBookings() {
+    try {
+      // Xóa booking - cascade sẽ tự động xóa lịch sử
+      const result = await this.query(
+        `DELETE FROM ${this.tableName} 
+         WHERE trangthai = 'DaHuy' 
+         AND auto_delete_at IS NOT NULL 
+         AND auto_delete_at <= NOW()
+         RETURNING maphieu`
+      );
+      
+      console.log(`Cleaned up ${result.rows.length} cancelled bookings:`, result.rows.map(r => r.maphieu));
+      return result.rows.length;
+    } catch (error) {
+      console.error('Error cleaning up cancelled bookings:', error);
+      throw error;
+    }
   }
 }
 

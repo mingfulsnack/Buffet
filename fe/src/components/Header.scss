@@ -11,6 +11,11 @@
   box-shadow: $header-shadow;
   z-index: $z-header;
 
+  // Modifier cho public layout (không có sidebar)
+  &.public {
+    left: 0;
+  }
+
   .header-content {
     height: 100%;
     padding: 0 $spacing-xl;
@@ -27,15 +32,15 @@
       align-items: center;
 
       .login-btn {
-        background-color: #FFAC1C;
-        border-color: #FFAC1C;
+        background-color: #ffac1c;
+        border-color: #ffac1c;
         &:hover {
-            background-color: darken(#FFAC1C, 10%) !important;
-          }
+          background-color: darken(#ffac1c, 10%) !important;
+        }
         display: flex;
         align-items: center;
         gap: $spacing-sm;
-        
+
         svg {
           font-size: $font-sm;
         }
@@ -69,17 +74,17 @@
         }
 
         .logout-btn {
-          background-color: #FFAC1C;
-          border-color: #FFAC1C;
+          background-color: #ffac1c;
+          border-color: #ffac1c;
 
           &:hover {
-            background-color: darken(#FFAC1C, 10%) !important;
+            background-color: darken(#ffac1c, 10%) !important;
           }
 
           display: flex;
           align-items: center;
           gap: $spacing-sm;
-          
+
           svg {
             font-size: $font-sm;
           }
@@ -93,15 +98,16 @@
 @media (max-width: 768px) {
   .header {
     left: 0;
-    
+
     .header-content {
       padding: 0 $spacing-lg;
-      
+
       .user-menu {
         gap: $spacing-md;
-        
+
         .user-info {
-          .user-name, .user-role {
+          .user-name,
+          .user-role {
             display: none;
           }
         }

@@ -255,6 +255,18 @@ cron.schedule(
   }
 );
 
+// Cleanup booking đã hủy mỗi 10 phút
+cron.schedule(
+  '*/10 * * * *',
+  async () => {
+    console.log('🗑️ Cleaning up cancelled bookings...');
+    await BookingCleanupService.cleanupCancelledBookings();
+  },
+  {
+    timezone: 'Asia/Ho_Chi_Minh',
+  }
+);
+
 console.log('✅ Scheduled jobs configured');
 
 // Graceful shutdown

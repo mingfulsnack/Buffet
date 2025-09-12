@@ -5,6 +5,7 @@ import Button from '../../components/Button';
 import Modal from '../../components/Modal';
 import DishForm from '../../components/menu/DishForm';
 import CategoryForm from '../../components/menu/CategoryForm';
+import CategoryFormContent from '../../components/menu/CategoryFormContent';
 import BuffetSetForm from '../../components/menu/BuffetSetForm';
 import './AdminMenuPage.scss';
 
@@ -22,7 +23,7 @@ const AdminMenuPage = () => {
 
   // Admin states
   const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState(''); // 'dish', 'category', 'buffet'
+  const [modalType, setModalType] = useState(''); // 'dish', 'category', 'buffet', 'buffet-category'
   const [editingItem, setEditingItem] = useState(null);
 
   // Prevent multiple API calls
@@ -187,15 +188,18 @@ const AdminMenuPage = () => {
       }
     } catch (error) {
       console.error(`Error deleting ${type}:`, error);
-      alert(
+      
+      // Hiển thị message cụ thể từ server nếu có
+      const errorMessage = error.response?.data?.message || 
         `Có lỗi xảy ra khi xóa ${
           type === 'dish'
             ? 'món ăn'
             : type === 'buffet'
             ? 'set buffet'
             : 'danh mục'
-        }`
-      );
+        }`;
+      
+      alert(errorMessage);
     }
   };
 
@@ -236,6 +240,16 @@ const AdminMenuPage = () => {
       } else {
         setCategories((prev) => [...prev, savedItem]);
       }
+    } else if (modalType === 'buffet-category') {
+      if (editingItem) {
+        setBuffetCategories((prev) =>
+          prev.map((cat) =>
+            cat.madanhmuc === savedItem.madanhmuc ? savedItem : cat
+          )
+        );
+      } else {
+        setBuffetCategories((prev) => [...prev, savedItem]);
+      }
     }
     handleModalClose();
   };
@@ -252,9 +266,9 @@ const AdminMenuPage = () => {
           <Button
             className="themcate"
             variant="primary"
-            onClick={() => handleAddItem('category')}
+            onClick={() => handleAddItem(activeTab === 'dishes' ? 'category' : 'buffet-category')}
           >
-            Thêm danh mục
+            {activeTab === 'dishes' ? 'Thêm danh mục món ăn' : 'Thêm danh mục buffet'}
           </Button>
           <Button
             className="theman"
@@ -469,14 +483,18 @@ const AdminMenuPage = () => {
                   ? 'món ăn'
                   : modalType === 'buffet'
                   ? 'set buffet'
-                  : 'danh mục'
+                  : modalType === 'category'
+                  ? 'danh mục món ăn'
+                  : 'danh mục buffet'
               }`
             : `Thêm ${
                 modalType === 'dish'
                   ? 'món ăn'
                   : modalType === 'buffet'
                   ? 'set buffet'
-                  : 'danh mục'
+                  : modalType === 'category'
+                  ? 'danh mục món ăn'
+                  : 'danh mục buffet'
               } mới`
         }
       >
@@ -489,10 +507,19 @@ const AdminMenuPage = () => {
           />
         )}
         {modalType === 'category' && (
-          <CategoryForm
+          <CategoryFormContent
             editingCategory={editingItem}
             onSave={handleSaveSuccess}
             onCancel={handleModalClose}
+            type="category"
+          />
+        )}
+        {modalType === 'buffet-category' && (
+          <CategoryFormContent
+            editingCategory={editingItem}
+            onSave={handleSaveSuccess}
+            onCancel={handleModalClose}
+            type="buffet-category"
           />
         )}
         {modalType === 'buffet' && (

@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { forceLogout } from '../utils/authUtils';
 import './Header.scss';
 
-const Header = () => {
+const Header = ({ isPublic = false }) => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -26,7 +26,7 @@ const Header = () => {
   };
 
   return (
-    <header className="header">
+    <header className={`header ${isPublic ? 'public' : ''}`}>
       <div className="header-content">
         <div className="header-left">
           {/* Can add breadcrumbs or page title here */}
@@ -39,8 +39,8 @@ const Header = () => {
                 <FaUser className="user-icon" />
                 <span className="user-name">{user?.hoten || 'User'}</span>
               </div>
-              <button 
-                className="btn btn-secondary logout-btn" 
+              <button
+                className="btn btn-secondary logout-btn"
                 onClick={handleLogout}
               >
                 <FaSignOutAlt />
@@ -48,10 +48,7 @@ const Header = () => {
               </button>
             </div>
           ) : (
-            <button 
-              className="btn btn-primary login-btn" 
-              onClick={handleLogin}
-            >
+            <button className="btn btn-primary login-btn" onClick={handleLogin}>
               <FaSignInAlt />
               <span>Đăng nhập</span>
             </button>

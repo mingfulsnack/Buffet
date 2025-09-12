@@ -12,8 +12,9 @@ const getTables = async (req, res) => {
 
     const tablesByArea = await Table.findAllWithArea(conditions);
 
-    res.json(formatResponse(true, tablesByArea, 'Lấy danh sách bàn thành công'));
-
+    res.json(
+      formatResponse(true, tablesByArea, 'Lấy danh sách bàn thành công')
+    );
   } catch (error) {
     console.error('Get tables error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -32,7 +33,6 @@ const getTableDetail = async (req, res) => {
     }
 
     res.json(formatResponse(true, table, 'Lấy chi tiết bàn thành công'));
-
   } catch (error) {
     console.error('Get table detail error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -50,17 +50,18 @@ const createTable = async (req, res) => {
       soghe,
       vitri,
       trangthai: 'Trong',
-      ghichu
+      ghichu,
     };
 
     const result = await Table.create(tableData);
 
     res.status(201).json(formatResponse(true, result, 'Tạo bàn thành công'));
-
   } catch (error) {
     console.error('Create table error:', error);
     if (error.code === '23505') {
-      res.status(400).json(formatErrorResponse('Tên bàn đã tồn tại trong vùng này'));
+      res
+        .status(400)
+        .json(formatErrorResponse('Tên bàn đã tồn tại trong vùng này'));
     } else if (error.code === '23503') {
       res.status(404).json(formatErrorResponse('Không tìm thấy vùng'));
     } else {
@@ -73,7 +74,10 @@ const createTable = async (req, res) => {
 const updateTable = async (req, res) => {
   try {
     const { id } = req.params;
-    const { tenban, soghe, vitri, ghichu } = req.body;
+    const { tenban, mavung, soghe, vitri, ghichu } = req.body;
+
+    console.log('UpdateTable - ID:', id);
+    console.log('UpdateTable - Request body:', req.body);
 
     // Kiểm tra bàn có tồn tại
     const existing = await Table.findById(id);
@@ -81,16 +85,22 @@ const updateTable = async (req, res) => {
       return res.status(404).json(formatErrorResponse('Không tìm thấy bàn'));
     }
 
+    console.log('UpdateTable - Existing table:', existing);
+
     const updateData = {};
     if (tenban !== undefined) updateData.tenban = tenban;
+    if (mavung !== undefined) updateData.mavung = mavung;
     if (soghe !== undefined) updateData.soghe = soghe;
     if (vitri !== undefined) updateData.vitri = vitri;
     if (ghichu !== undefined) updateData.ghichu = ghichu;
 
+    console.log('UpdateTable - Update data:', updateData);
+
     const result = await Table.update(id, updateData);
 
-    res.json(formatResponse(true, result, 'Cập nhật bàn thành công'));
+    console.log('UpdateTable - Result:', result);
 
+    res.json(formatResponse(true, result, 'Cập nhật bàn thành công'));
   } catch (error) {
     console.error('Update table error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -111,12 +121,19 @@ const updateTableStatus = async (req, res) => {
       return res.status(404).json(formatErrorResponse('Không tìm thấy bàn'));
     }
 
-    res.json(formatResponse(true, result, 'Cập nhật trạng thái bàn thành công'));
-
+    res.json(
+      formatResponse(true, result, 'Cập nhật trạng thái bàn thành công')
+    );
   } catch (error) {
     console.error('Update table status error:', error);
     if (error.message.includes('version')) {
-      res.status(409).json(formatErrorResponse('Bàn đã được cập nhật bởi người khác. Vui lòng tải lại trang.'));
+      res
+        .status(409)
+        .json(
+          formatErrorResponse(
+            'Bàn đã được cập nhật bởi người khác. Vui lòng tải lại trang.'
+          )
+        );
     } else if (error.message.includes('trạng thái')) {
       res.status(400).json(formatErrorResponse(error.message));
     } else {
@@ -133,7 +150,9 @@ const deleteTable = async (req, res) => {
     // Kiểm tra bàn có đặt chỗ đang hoạt động không
     const hasActiveBookings = await Table.hasActiveBookings(id);
     if (hasActiveBookings) {
-      return res.status(400).json(formatErrorResponse('Không thể xóa bàn đang có đặt chỗ'));
+      return res
+        .status(400)
+        .json(formatErrorResponse('Không thể xóa bàn đang có đặt chỗ'));
     }
 
     const result = await Table.delete(id);
@@ -143,7 +162,6 @@ const deleteTable = async (req, res) => {
     }
 
     res.json(formatResponse(true, null, 'Xóa bàn thành công'));
-
   } catch (error) {
     console.error('Delete table error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
@@ -169,7 +187,6 @@ const createArea = async (req, res) => {
     const result = await Table.createArea({ tenvung, mota });
 
     res.status(201).json(formatResponse(true, result, 'Tạo vùng thành công'));
-
   } catch (error) {
     console.error('Create area error:', error);
     if (error.code === '23505') {
@@ -188,5 +205,5 @@ module.exports = {
   updateTableStatus,
   deleteTable,
   getAreas,
-  createArea
+  createArea,
 };
