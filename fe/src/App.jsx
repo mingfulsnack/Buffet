@@ -20,6 +20,7 @@ import AdminMenuPage from './pages/admin/AdminMenuPage';
 import TablesPage from './pages/TablesPage';
 import AdminBookingsPage from './pages/AdminBookingsPage';
 import EmployeesPage from './pages/EmployeesPage';
+import OrdersPage from './pages/OrdersPage';
 import './styles/globals.scss';
 
 // Protected Route component
@@ -135,7 +136,7 @@ function App() {
               path="admin/customers"
               element={
                 <ProtectedRoute adminOnly={true}>
-                  <div>Customers Page</div>
+                  <OrdersPage />
                 </ProtectedRoute>
               }
             />
@@ -143,7 +144,7 @@ function App() {
               path="admin/orders"
               element={
                 <ProtectedRoute adminOnly={true}>
-                  <div>Orders Page</div>
+                  <OrdersPage />
                 </ProtectedRoute>
               }
             />

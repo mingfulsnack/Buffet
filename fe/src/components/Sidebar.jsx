@@ -73,7 +73,7 @@ const Sidebar = () => {
     {
       path: '/admin/customers',
       icon: <FaUsers />,
-      label: 'Quản Lý Khách Hàng',
+      label: 'Quản Lý Đơn Hàng',
     },
     {
       path: '/admin/reports',

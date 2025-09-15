@@ -236,7 +236,11 @@ const EmployeesPage = () => {
     <div className="employees-page">
       <div className="page-header">
         <h1>Quản lý nhân viên</h1>
-        <Button className='themnv' variant="primary" onClick={handleAddEmployee}>
+        <Button
+          className="themnv"
+          variant="primary"
+          onClick={handleAddEmployee}
+        >
           Thêm nhân viên
         </Button>
       </div>
@@ -299,15 +303,13 @@ const EmployeesPage = () => {
                   <td>
                     <div className="action-buttons">
                       <Button
-                        variant="info"
-                        size="sm"
+                        variant="edit"
                         onClick={() => handleEditEmployee(employee)}
                       >
                         Sửa
                       </Button>
                       <Button
-                        variant="danger"
-                        size="sm"
+                        variant="delete"
                         onClick={() => handleDeleteEmployee(employee.manv)}
                       >
                         Xóa
@@ -480,7 +482,7 @@ const EmployeesPage = () => {
               Hủy
             </Button>
             <Button
-              className='themnvmodal'
+              className="themnvmodal"
               variant="primary"
               onClick={handleSubmit}
               disabled={submitting}

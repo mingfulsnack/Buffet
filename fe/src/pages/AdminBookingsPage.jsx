@@ -212,8 +212,7 @@ const AdminBookingsPage = () => {
                       {booking.trangthai === 'DaDat' && (
                         <>
                           <Button
-                            variant="success"
-                            size="sm"
+                            variant="save"
                             onClick={() =>
                               handleConfirmBooking(booking.maphieu)
                             }
@@ -221,8 +220,7 @@ const AdminBookingsPage = () => {
                             Xác nhận
                           </Button>
                           <Button
-                            variant="danger"
-                            size="sm"
+                            variant="delete"
                             onClick={() => {
                               setSelectedBooking(booking);
                               setShowCancelModal(true);

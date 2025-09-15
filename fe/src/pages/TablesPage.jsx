@@ -301,15 +301,13 @@ const TablesPage = () => {
                         <div className="action-buttons">
                           <Button
                             onClick={() => handleEditTable(table, area)}
-                            className="btn-edit"
-                            size="small"
+                            variant="edit"
                           >
                             Sửa
                           </Button>
                           <Button
                             onClick={() => handleDeleteTable(table)}
-                            className="btn-delete"
-                            size="small"
+                            variant="delete"
                           >
                             Xóa
                           </Button>

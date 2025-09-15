@@ -188,9 +188,10 @@ const AdminMenuPage = () => {
       }
     } catch (error) {
       console.error(`Error deleting ${type}:`, error);
-      
+
       // Hiển thị message cụ thể từ server nếu có
-      const errorMessage = error.response?.data?.message || 
+      const errorMessage =
+        error.response?.data?.message ||
         `Có lỗi xảy ra khi xóa ${
           type === 'dish'
             ? 'món ăn'
@@ -198,7 +199,7 @@ const AdminMenuPage = () => {
             ? 'set buffet'
             : 'danh mục'
         }`;
-      
+
       alert(errorMessage);
     }
   };
@@ -266,9 +267,15 @@ const AdminMenuPage = () => {
           <Button
             className="themcate"
             variant="primary"
-            onClick={() => handleAddItem(activeTab === 'dishes' ? 'category' : 'buffet-category')}
+            onClick={() =>
+              handleAddItem(
+                activeTab === 'dishes' ? 'category' : 'buffet-category'
+              )
+            }
           >
-            {activeTab === 'dishes' ? 'Thêm danh mục món ăn' : 'Thêm danh mục buffet'}
+            {activeTab === 'dishes'
+              ? 'Thêm danh mục món ăn'
+              : 'Thêm danh mục buffet'}
           </Button>
           <Button
             className="theman"
@@ -354,15 +361,13 @@ const AdminMenuPage = () => {
                     <td className="dish-category">{dish.tendanhmuc}</td>
                     <td className="dish-actions">
                       <Button
-                        variant="info"
-                        size="sm"
+                        variant="edit"
                         onClick={() => handleEditItem('dish', dish)}
                       >
                         Sửa
                       </Button>
                       <Button
-                        variant="danger"
-                        size="sm"
+                        variant="delete"
                         onClick={() => handleDeleteItem('dish', dish.mamon)}
                       >
                         Xóa
@@ -442,15 +447,13 @@ const AdminMenuPage = () => {
                     <td className="set-description">{set.mota || '-'}</td>
                     <td className="set-actions">
                       <Button
-                        variant="info"
-                        size="sm"
+                        variant="edit"
                         onClick={() => handleEditItem('buffet', set)}
                       >
                         Sửa
                       </Button>
                       <Button
-                        variant="danger"
-                        size="sm"
+                        variant="delete"
                         onClick={() => handleDeleteItem('buffet', set.maset)}
                       >
                         Xóa
