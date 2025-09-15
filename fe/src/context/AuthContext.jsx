@@ -54,22 +54,25 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     // Clear any other stored auth data
     sessionStorage.clear();
-    // Navigate to dashboard after logout - will be handled by component using this
-    // We can't use navigate here since AuthProvider is outside Router
+
+    // Force reload to ensure clean state
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 100);
   };
 
   const isAuthenticated = () => {
     const hasUser = !!user;
     const hasToken = !!localStorage.getItem('token');
     const result = hasUser && hasToken;
-    
+
     console.log('isAuthenticated check:', {
       hasUser,
       hasToken,
       result,
-      user: user?.hoten || 'No user'
+      user: user?.hoten || 'No user',
     });
-    
+
     return result;
   };
 

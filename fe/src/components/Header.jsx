@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FaSignInAlt, FaSignOutAlt, FaUser } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
-import { forceLogout } from '../utils/authUtils';
 import './Header.scss';
 
 const Header = ({ isPublic = false }) => {
@@ -14,15 +13,8 @@ const Header = ({ isPublic = false }) => {
   };
 
   const handleLogout = () => {
-    try {
-      logout();
-      // Try normal navigation first
-      navigate('/', { replace: true });
-    } catch (error) {
-      console.error('Normal logout failed, using force logout:', error);
-      // If normal logout fails, use force logout
-      forceLogout();
-    }
+    console.log('Logging out user...');
+    logout(); // AuthContext sẽ tự handle redirect
   };
 
   return (
