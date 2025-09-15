@@ -18,7 +18,7 @@ class Order extends BaseModel {
       // Tính tổng tiền
       let tongTien = 0;
       const chiTietItems = [];
-      
+
       for (const item of monAn) {
         let dongia = 0;
         if (item.type === 'monan') {
@@ -38,16 +38,16 @@ class Order extends BaseModel {
             dongia = setResult.rows[0].dongia;
           }
         }
-        
+
         const thanhtien = dongia * item.soluong;
         tongTien += thanhtien;
-        
+
         chiTietItems.push({
           type: item.type,
           id: item.id,
           soluong: item.soluong,
           dongia: dongia,
-          thanhtien: thanhtien
+          thanhtien: thanhtien,
         });
       }
 
@@ -85,7 +85,7 @@ class Order extends BaseModel {
   // Lấy tất cả đơn hàng với chi tiết
   static async getAllOrdersWithDetails() {
     const baseModel = new BaseModel('donhang');
-    
+
     const query = `
       SELECT 
         d.madon,
@@ -113,7 +113,7 @@ class Order extends BaseModel {
       GROUP BY d.madon, d.tongtien, d.ghichu, d.thoi_gian_tao
       ORDER BY d.thoi_gian_tao DESC
     `;
-    
+
     const result = await baseModel.query(query);
     return result.rows;
   }
@@ -121,7 +121,7 @@ class Order extends BaseModel {
   // Lấy đơn hàng theo ID với chi tiết
   static async getOrderWithDetails(madon) {
     const baseModel = new BaseModel('donhang');
-    
+
     const query = `
       SELECT 
         d.madon,
@@ -149,7 +149,7 @@ class Order extends BaseModel {
       WHERE d.madon = $1
       GROUP BY d.madon, d.tongtien, d.ghichu, d.thoi_gian_tao
     `;
-    
+
     const result = await baseModel.query(query, [madon]);
     return result.rows[0] || null;
   }
@@ -161,15 +161,14 @@ class Order extends BaseModel {
 
     return await baseModel.transaction(async (client) => {
       // Xóa chi tiết cũ
-      await client.query(
-        'DELETE FROM donhang_chitiet WHERE madon = $1',
-        [madon]
-      );
+      await client.query('DELETE FROM donhang_chitiet WHERE madon = $1', [
+        madon,
+      ]);
 
       // Tính tổng tiền mới
       let tongTien = 0;
       const chiTietItems = [];
-      
+
       for (const item of monAn) {
         let dongia = 0;
         if (item.type === 'monan') {
@@ -189,16 +188,16 @@ class Order extends BaseModel {
             dongia = setResult.rows[0].dongia;
           }
         }
-        
+
         const thanhtien = dongia * item.soluong;
         tongTien += thanhtien;
-        
+
         chiTietItems.push({
           type: item.type,
           id: item.id,
           soluong: item.soluong,
           dongia: dongia,
-          thanhtien: thanhtien
+          thanhtien: thanhtien,
         });
       }
 
@@ -237,8 +236,10 @@ class Order extends BaseModel {
     const baseModel = new BaseModel('donhang');
     return await baseModel.transaction(async (client) => {
       // Xóa chi tiết trước
-      await client.query('DELETE FROM donhang_chitiet WHERE madon = $1', [madon]);
-      
+      await client.query('DELETE FROM donhang_chitiet WHERE madon = $1', [
+        madon,
+      ]);
+
       // Xóa đơn hàng
       const result = await client.query(
         'DELETE FROM donhang WHERE madon = $1 RETURNING *',
@@ -249,7 +250,7 @@ class Order extends BaseModel {
     });
   }
 
-  // Xác nhận đơn hàng (tạo hóa đơn)
+  // Xác nhận đơn hàng (tạo hóa đơn và xóa đơn hàng)
   static async confirmOrder(madon) {
     const baseModel = new BaseModel('donhang');
 
@@ -282,7 +283,15 @@ class Order extends BaseModel {
         [madon, tongtien]
       );
 
-      return invoiceResult.rows[0];
+      const invoice = invoiceResult.rows[0];
+
+      // Sau khi tạo hóa đơn thành công, xóa chi tiết đơn hàng và đơn hàng
+      await client.query('DELETE FROM donhang_chitiet WHERE madon = $1', [
+        madon,
+      ]);
+      await client.query('DELETE FROM donhang WHERE madon = $1', [madon]);
+
+      return invoice;
     });
   }
 }

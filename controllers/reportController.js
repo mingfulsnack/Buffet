@@ -1,146 +1,135 @@
-const { Booking, Table, Customer, Menu } = require('../models');
-const { formatResponse, formatErrorResponse } = require('../utils/helpers');
-const moment = require('moment');
+const Report = require('../models/Report');
+const {
+  formatResponse,
+  formatErrorResponse,
+} = require('../utils/responseFormatter');
 
-// Báo cáo tổng quan dashboard
-const getDashboardStats = async (req, res) => {
+// Get revenue by date
+const getRevenueByDate = async (req, res) => {
   try {
-    const today = moment().format('YYYY-MM-DD');
+    const { startDate, endDate } = req.query;
 
-    // Thống kê hôm nay
-    const todayStats = await Booking.getDailyStats(today);
-
-    // Sử dụng model methods để lấy stats
-    const monthStats = await Booking.getMonthlyStats();
-    const tableStats = await Table.getCurrentStatus();
-    const topCustomers = await Customer.getTopCustomers();
-    const revenueChart = await Booking.getRevenueChart(7);
-
-    const dashboardData = {
-      hom_nay: todayStats,
-      thang_nay: monthStats,
-      tinh_trang_ban: tableStats,
-      top_khach_hang: topCustomers,
-      bieu_do_doanh_thu: revenueChart
-    };
-
-    res.json(formatResponse(true, dashboardData, 'Lấy thống kê dashboard thành công'));
-
-  } catch (error) {
-    console.error('Get dashboard stats error:', error);
-    res.status(500).json(formatErrorResponse('Lỗi server'));
-  }
-};
-
-// Báo cáo doanh thu theo khoảng thời gian
-const getRevenueReport = async (req, res) => {
-  try {
-    const { tu_ngay, den_ngay, group_by = 'day' } = req.query;
-
-    if (!tu_ngay || !den_ngay) {
-      return res.status(400).json(formatErrorResponse('Thiếu thông tin khoảng thời gian'));
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Please provide start date and end date'));
     }
 
-
-    const result = await Booking.getRevenueReport(tu_ngay, den_ngay, group_by);
-
-    res.json(formatResponse(
-      true, 
-      result, 
-      'Lấy báo cáo doanh thu thành công'
-    ));
-
+    const data = await Report.getRevenueByDate(startDate, endDate);
+    res.json(formatResponse(true, data, 'Get daily revenue successfully'));
   } catch (error) {
-    console.error('Get revenue report error:', error);
-    res.status(500).json(formatErrorResponse('Lỗi server'));
+    console.error('Get revenue by date error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
   }
 };
 
-// Báo cáo hiệu suất sử dụng bàn
-const getTableUsageReport = async (req, res) => {
+// Get revenue by month
+const getRevenueByMonth = async (req, res) => {
   try {
-    const { tu_ngay, den_ngay } = req.query;
+    const { year } = req.query;
 
-    if (!tu_ngay || !den_ngay) {
-      return res.status(400).json(formatErrorResponse('Thiếu thông tin khoảng thời gian'));
+    if (!year) {
+      return res.status(400).json(formatErrorResponse('Please provide year'));
     }
 
-    const usageReport = await Table.getUsageReport(tu_ngay, den_ngay);
-
-    res.json(formatResponse(
-      true, 
-      usageReport, 
-      'Lấy báo cáo hiệu suất bàn thành công'
-    ));
-
+    const data = await Report.getRevenueByMonth(parseInt(year));
+    res.json(formatResponse(true, data, 'Get monthly revenue successfully'));
   } catch (error) {
-    console.error('Get table usage report error:', error);
-    res.status(500).json(formatErrorResponse('Lỗi server'));
+    console.error('Get revenue by month error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
   }
 };
 
-// Báo cáo khách hàng
-const getCustomerReport = async (req, res) => {
+// Get revenue by year
+const getRevenueByYear = async (req, res) => {
   try {
-    const { tu_ngay, den_ngay, sap_xep = 'doanh_thu' } = req.query;
+    const { startYear, endYear } = req.query;
 
-    if (!tu_ngay || !den_ngay) {
-      return res.status(400).json(formatErrorResponse('Thiếu thông tin khoảng thời gian'));
+    if (!startYear || !endYear) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Please provide start year and end year'));
     }
 
-    const customerReport = await Customer.getCustomerReport(tu_ngay, den_ngay, sap_xep);
-
-    res.json(formatResponse(
-      true, 
-      customerReport, 
-      'Lấy báo cáo khách hàng thành công'
-    ));
-
+    const data = await Report.getRevenueByYear(
+      parseInt(startYear),
+      parseInt(endYear)
+    );
+    res.json(formatResponse(true, data, 'Get yearly revenue successfully'));
   } catch (error) {
-    console.error('Get customer report error:', error);
-    res.status(500).json(formatErrorResponse('Lỗi server'));
+    console.error('Get revenue by year error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
   }
 };
 
-// Báo cáo món ăn phổ biến
-const getPopularDishesReport = async (req, res) => {
+// Get overall stats
+const getOverallStats = async (req, res) => {
   try {
-    const { tu_ngay, den_ngay } = req.query;
+    const { startDate, endDate } = req.query;
 
-    if (!tu_ngay || !den_ngay) {
-      return res.status(400).json(formatErrorResponse('Thiếu thông tin khoảng thời gian'));
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Please provide start date and end date'));
     }
 
-    const popularDishesReport = await Menu.getPopularDishes(tu_ngay, den_ngay);
-
-    res.json(formatResponse(
-      true, 
-      popularDishesReport, 
-      'Lấy báo cáo món ăn phổ biến thành công'
-    ));
-
+    const data = await Report.getOverallStats(startDate, endDate);
+    res.json(formatResponse(true, data, 'Get overall stats successfully'));
   } catch (error) {
-    console.error('Get popular dishes report error:', error);
-    res.status(500).json(formatErrorResponse('Lỗi server'));
+    console.error('Get overall stats error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
   }
 };
 
-// Xuất báo cáo Excel/CSV (placeholder - cần implement thêm)
-const exportReport = async (req, res) => {
+// Get top revenue days
+const getTopRevenueDays = async (req, res) => {
   try {
-    // TODO: Implement Excel/CSV export functionality
-    res.json(formatResponse(false, null, 'Chức năng xuất báo cáo đang được phát triển'));
+    const { startDate, endDate, limit = 10 } = req.query;
+
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Please provide start date and end date'));
+    }
+
+    const data = await Report.getTopRevenueDays(
+      startDate,
+      endDate,
+      parseInt(limit)
+    );
+    res.json(formatResponse(true, data, 'Get top revenue days successfully'));
   } catch (error) {
-    console.error('Export report error:', error);
-    res.status(500).json(formatErrorResponse('Lỗi server'));
+    console.error('Get top revenue days error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
+  }
+};
+
+// Get payment status stats
+const getPaymentStatusStats = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Please provide start date and end date'));
+    }
+
+    const data = await Report.getPaymentStatusStats(startDate, endDate);
+    res.json(
+      formatResponse(true, data, 'Get payment status stats successfully')
+    );
+  } catch (error) {
+    console.error('Get payment status stats error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
   }
 };
 
 module.exports = {
-  getDashboardStats,
-  getRevenueReport,
-  getTableUsageReport,
-  getCustomerReport,
-  getPopularDishesReport,
-  exportReport
+  getRevenueByDate,
+  getRevenueByMonth,
+  getRevenueByYear,
+  getOverallStats,
+  getTopRevenueDays,
+  getPaymentStatusStats,
 };

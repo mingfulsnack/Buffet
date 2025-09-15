@@ -27,6 +27,7 @@ const customerRoutes = require('./routes/customers');
 const employeeRoutes = require('./routes/employees');
 const reportRoutes = require('./routes/reports');
 const orderRoutes = require('./routes/orderRoutes');
+const invoiceRoutes = require('./routes/invoices');
 
 // Security middleware
 app.use(helmet());
@@ -111,6 +112,7 @@ app.use('/api/customers', customerRoutes);
 app.use('/api/employees', employeeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/invoices', invoiceRoutes);
 
 // Welcome route
 app.get('/', (req, res) => {

@@ -9,6 +9,8 @@ import {
   FaChartBar,
   FaCalendarAlt,
   FaTachometerAlt,
+  FaFileInvoice,
+  FaShoppingCart,
 } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.scss';
@@ -71,9 +73,14 @@ const Sidebar = () => {
       label: 'Quản Lý Bàn',
     },
     {
-      path: '/admin/customers',
-      icon: <FaUsers />,
+      path: '/admin/orders',
+      icon: <FaShoppingCart />,
       label: 'Quản Lý Đơn Hàng',
+    },
+    {
+      path: '/admin/invoices',
+      icon: <FaFileInvoice />,
+      label: 'Quản Lý Hóa Đơn',
     },
     {
       path: '/admin/reports',

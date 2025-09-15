@@ -21,6 +21,8 @@ import TablesPage from './pages/TablesPage';
 import AdminBookingsPage from './pages/AdminBookingsPage';
 import EmployeesPage from './pages/EmployeesPage';
 import OrdersPage from './pages/OrdersPage';
+import InvoicesPage from './pages/InvoicesPage';
+import ReportsPage from './pages/ReportsPage';
 import './styles/globals.scss';
 
 // Protected Route component
@@ -133,14 +135,6 @@ function App() {
               }
             />
             <Route
-              path="admin/customers"
-              element={
-                <ProtectedRoute adminOnly={true}>
-                  <OrdersPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="admin/orders"
               element={
                 <ProtectedRoute adminOnly={true}>
@@ -149,10 +143,18 @@ function App() {
               }
             />
             <Route
+              path="admin/invoices"
+              element={
+                <ProtectedRoute adminOnly={true}>
+                  <InvoicesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="admin/reports"
               element={
                 <ProtectedRoute adminOnly={true}>
-                  <div>Reports Page</div>
+                  <ReportsPage />
                 </ProtectedRoute>
               }
             />

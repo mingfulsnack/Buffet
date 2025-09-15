@@ -25,9 +25,9 @@ const OrdersPage = () => {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3000/api/orders', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -54,9 +54,9 @@ const OrdersPage = () => {
       const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:3000/api/orders/menu', {
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
       });
 
       if (!response.ok) {
@@ -78,12 +78,15 @@ const OrdersPage = () => {
   const fetchOrderDetails = async (orderId) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/orders/${orderId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `http://localhost:3000/api/orders/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         }
-      });
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch order details');
@@ -93,14 +96,14 @@ const OrdersPage = () => {
       if (data.success) {
         const order = data.data;
         setOrderNote(order.ghichu || '');
-        
+
         // Convert chi tiết thành orderItems format
-        const items = order.chitiet.map(item => ({
+        const items = order.chitiet.map((item) => ({
           id: item.mamon || item.maset,
           type: item.type,
           name: item.tenmon,
           price: item.dongia,
-          soluong: item.soluong
+          soluong: item.soluong,
         }));
         setOrderItems(items);
       }
@@ -132,13 +135,16 @@ const OrdersPage = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/orders/${orderId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `http://localhost:3000/api/orders/${orderId}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         }
-      });
+      );
 
       if (!response.ok) {
         throw new Error('Failed to delete order');
@@ -158,19 +164,26 @@ const OrdersPage = () => {
   };
 
   const handleConfirmOrder = async (orderId) => {
-    if (!window.confirm('Bạn có chắc chắn muốn xác nhận đơn hàng này?')) {
+    if (
+      !window.confirm(
+        'Bạn có chắc chắn muốn xác nhận đơn hàng này? Đơn hàng sẽ được chuyển thành hóa đơn và bị xóa khỏi danh sách.'
+      )
+    ) {
       return;
     }
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:3000/api/orders/${orderId}/confirm`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+      const response = await fetch(
+        `http://localhost:3000/api/orders/${orderId}/confirm`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
         }
-      });
+      );
 
       if (!response.ok) {
         throw new Error('Failed to confirm order');
@@ -179,7 +192,7 @@ const OrdersPage = () => {
       const data = await response.json();
       if (data.success) {
         fetchOrders();
-        alert('Xác nhận đơn hàng thành công! Đã tạo hóa đơn.');
+        alert('Xác nhận đơn hàng thành công! Đã tạo hóa đơn và xóa đơn hàng.');
       } else {
         alert(data.message || 'Lỗi khi xác nhận đơn hàng');
       }
@@ -190,16 +203,18 @@ const OrdersPage = () => {
   };
 
   const addItemToOrder = (item) => {
-    const existingItem = orderItems.find(orderItem => 
-      orderItem.id === item.id && orderItem.type === item.type
+    const existingItem = orderItems.find(
+      (orderItem) => orderItem.id === item.id && orderItem.type === item.type
     );
 
     if (existingItem) {
-      setOrderItems(orderItems.map(orderItem =>
-        orderItem.id === item.id && orderItem.type === item.type
-          ? { ...orderItem, soluong: orderItem.soluong + 1 }
-          : orderItem
-      ));
+      setOrderItems(
+        orderItems.map((orderItem) =>
+          orderItem.id === item.id && orderItem.type === item.type
+            ? { ...orderItem, soluong: orderItem.soluong + 1 }
+            : orderItem
+        )
+      );
     } else {
       setOrderItems([...orderItems, { ...item, soluong: 1 }]);
     }
@@ -211,21 +226,28 @@ const OrdersPage = () => {
       return;
     }
 
-    setOrderItems(orderItems.map(item =>
-      item.id === itemId && item.type === itemType
-        ? { ...item, soluong: newQuantity }
-        : item
-    ));
+    setOrderItems(
+      orderItems.map((item) =>
+        item.id === itemId && item.type === itemType
+          ? { ...item, soluong: newQuantity }
+          : item
+      )
+    );
   };
 
   const removeItemFromOrder = (itemId, itemType) => {
-    setOrderItems(orderItems.filter(item => 
-      !(item.id === itemId && item.type === itemType)
-    ));
+    setOrderItems(
+      orderItems.filter(
+        (item) => !(item.id === itemId && item.type === itemType)
+      )
+    );
   };
 
   const calculateTotal = () => {
-    return orderItems.reduce((total, item) => total + (item.price * item.soluong), 0);
+    return orderItems.reduce(
+      (total, item) => total + item.price * item.soluong,
+      0
+    );
   };
 
   const handleSaveOrder = async () => {
@@ -237,29 +259,29 @@ const OrdersPage = () => {
     try {
       setSubmitting(true);
       const token = localStorage.getItem('token');
-      
+
       const orderData = {
-        monAn: orderItems.map(item => ({
+        monAn: orderItems.map((item) => ({
           id: item.id,
           type: item.type,
-          soluong: item.soluong
+          soluong: item.soluong,
         })),
-        ghichu: orderNote
+        ghichu: orderNote,
       };
 
-      const url = editingOrder 
+      const url = editingOrder
         ? `http://localhost:3000/api/orders/${editingOrder.madon}`
         : 'http://localhost:3000/api/orders';
-      
+
       const method = editingOrder ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
         method,
         headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify(orderData)
+        body: JSON.stringify(orderData),
       });
 
       if (!response.ok) {
@@ -270,7 +292,11 @@ const OrdersPage = () => {
       if (data.success) {
         setShowOrderModal(false);
         fetchOrders();
-        alert(editingOrder ? 'Cập nhật đơn hàng thành công!' : 'Tạo đơn hàng thành công!');
+        alert(
+          editingOrder
+            ? 'Cập nhật đơn hàng thành công!'
+            : 'Tạo đơn hàng thành công!'
+        );
       } else {
         alert(data.message || 'Lỗi khi lưu đơn hàng');
       }
@@ -285,7 +311,7 @@ const OrdersPage = () => {
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
-      currency: 'VND'
+      currency: 'VND',
     }).format(amount);
   };
 
@@ -323,10 +349,12 @@ const OrdersPage = () => {
           <tbody>
             {orders.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center">Chưa có đơn hàng nào</td>
+                <td colSpan="6" className="text-center">
+                  Chưa có đơn hàng nào
+                </td>
               </tr>
             ) : (
-              orders.map(order => (
+              orders.map((order) => (
                 <tr key={order.madon}>
                   <td>{order.madon}</td>
                   <td className="dishes-cell" title={order.monan_text}>
@@ -382,13 +410,17 @@ const OrdersPage = () => {
               {/* Menu Selection */}
               <div className="menu-section">
                 <h3>Chọn món</h3>
-                
+
                 {/* Dishes */}
                 <div className="menu-category">
                   <h4>Món ăn</h4>
                   <div className="menu-grid">
-                    {menuData.dishes.map(dish => (
-                      <div key={dish.id} className="menu-item" onClick={() => addItemToOrder(dish)}>
+                    {menuData.dishes.map((dish) => (
+                      <div
+                        key={dish.id}
+                        className="menu-item"
+                        onClick={() => addItemToOrder(dish)}
+                      >
                         <div className="menu-item-image">
                           {dish.image ? (
                             <img src={dish.image} alt={dish.name} />
@@ -409,8 +441,12 @@ const OrdersPage = () => {
                 <div className="menu-category">
                   <h4>Set Buffet</h4>
                   <div className="menu-grid">
-                    {menuData.sets.map(set => (
-                      <div key={set.id} className="menu-item" onClick={() => addItemToOrder(set)}>
+                    {menuData.sets.map((set) => (
+                      <div
+                        key={set.id}
+                        className="menu-item"
+                        onClick={() => addItemToOrder(set)}
+                      >
                         <div className="menu-item-image">
                           {set.image ? (
                             <img src={set.image} alt={set.name} />
@@ -437,22 +473,39 @@ const OrdersPage = () => {
                   <>
                     <div className="cart-items">
                       {orderItems.map((item, index) => (
-                        <div key={`${item.type}-${item.id}-${index}`} className="cart-item">
+                        <div
+                          key={`${item.type}-${item.id}-${index}`}
+                          className="cart-item"
+                        >
                           <div className="item-info">
                             <h5>{item.name}</h5>
-                            <p className="item-price">{formatCurrency(item.price)}</p>
+                            <p className="item-price">
+                              {formatCurrency(item.price)}
+                            </p>
                           </div>
                           <div className="quantity-controls">
                             <button
                               className="btn btn-sm"
-                              onClick={() => updateItemQuantity(item.id, item.type, item.soluong - 1)}
+                              onClick={() =>
+                                updateItemQuantity(
+                                  item.id,
+                                  item.type,
+                                  item.soluong - 1
+                                )
+                              }
                             >
                               <FaMinus />
                             </button>
                             <span className="quantity">{item.soluong}</span>
                             <button
                               className="btn btn-sm"
-                              onClick={() => updateItemQuantity(item.id, item.type, item.soluong + 1)}
+                              onClick={() =>
+                                updateItemQuantity(
+                                  item.id,
+                                  item.type,
+                                  item.soluong + 1
+                                )
+                              }
                             >
                               <FaPlus />
                             </button>
@@ -462,7 +515,9 @@ const OrdersPage = () => {
                           </div>
                           <button
                             className="btn btn-sm btn-danger"
-                            onClick={() => removeItemFromOrder(item.id, item.type)}
+                            onClick={() =>
+                              removeItemFromOrder(item.id, item.type)
+                            }
                           >
                             <FaTrash />
                           </button>
@@ -501,7 +556,11 @@ const OrdersPage = () => {
                     onClick={handleSaveOrder}
                     disabled={submitting || orderItems.length === 0}
                   >
-                    {submitting ? 'Đang lưu...' : (editingOrder ? 'Cập nhật' : 'Lưu đơn hàng')}
+                    {submitting
+                      ? 'Đang lưu...'
+                      : editingOrder
+                      ? 'Cập nhật'
+                      : 'Lưu đơn hàng'}
                   </button>
                 </div>
               </div>

@@ -7,22 +7,22 @@ const reportController = require('../controllers/reportController');
 router.use(authenticateToken);
 router.use(checkRole(['Admin', 'Manager']));
 
-// Dashboard thống kê tổng quan
-router.get('/dashboard', reportController.getDashboardStats);
+// Lấy doanh thu theo ngày
+router.get('/revenue/daily', reportController.getRevenueByDate);
 
-// Báo cáo doanh thu
-router.get('/revenue', reportController.getRevenueReport);
+// Lấy doanh thu theo tháng
+router.get('/revenue/monthly', reportController.getRevenueByMonth);
 
-// Báo cáo hiệu suất sử dụng bàn
-router.get('/table-usage', reportController.getTableUsageReport);
+// Lấy doanh thu theo năm
+router.get('/revenue/yearly', reportController.getRevenueByYear);
 
-// Báo cáo khách hàng
-router.get('/customers', reportController.getCustomerReport);
+// Lấy thống kê tổng quan
+router.get('/stats/overall', reportController.getOverallStats);
 
-// Báo cáo món ăn phổ biến
-router.get('/popular-dishes', reportController.getPopularDishesReport);
+// Lấy top ngày có doanh thu cao nhất
+router.get('/stats/top-revenue-days', reportController.getTopRevenueDays);
 
-// Xuất báo cáo
-router.post('/export', reportController.exportReport);
+// Lấy thống kê theo trạng thái thanh toán
+router.get('/stats/payment-status', reportController.getPaymentStatusStats);
 
 module.exports = router;
