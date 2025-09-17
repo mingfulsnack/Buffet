@@ -9,7 +9,6 @@ import CategoryFormContent from '../../components/menu/CategoryFormContent';
 import BuffetSetForm from '../../components/menu/BuffetSetForm';
 import {
   showSuccess,
-  showError,
   showLoadingToast,
   showValidationError,
 } from '../../utils/toast';

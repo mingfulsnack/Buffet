@@ -4,8 +4,6 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import {
-  showSuccess,
-  showError,
   showLoadingToast,
   showValidationError,
 } from '../utils/toast';

@@ -3,8 +3,6 @@ import Button from '../components/Button';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
 import {
-  showSuccess,
-  showError,
   showLoadingToast,
   showValidationError,
 } from '../utils/toast';
@@ -84,55 +82,55 @@ const InvoicesPage = () => {
     }
   };
 
-  const handleUpdatePaymentStatus = async (invoiceId, newStatus) => {
-    if (
-      !window.confirm(
-        `Bạn có chắc chắn muốn đổi trạng thái thanh toán thành "${getStatusText(
-          newStatus
-        )}"?`
-      )
-    ) {
-      return;
-    }
+  // const handleUpdatePaymentStatus = async (invoiceId, newStatus) => {
+  //   if (
+  //     !window.confirm(
+  //       `Bạn có chắc chắn muốn đổi trạng thái thanh toán thành "${getStatusText(
+  //         newStatus
+  //       )}"?`
+  //     )
+  //   ) {
+  //     return;
+  //   }
 
-    const updateOperation = async () => {
-      const token = localStorage.getItem('token');
-      const response = await fetch(
-        `http://localhost:3000/api/invoices/${invoiceId}/payment-status`,
-        {
-          method: 'PATCH',
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ trangthai_thanhtoan: newStatus }),
-        }
-      );
+  //   const updateOperation = async () => {
+  //     const token = localStorage.getItem('token');
+  //     const response = await fetch(
+  //       `http://localhost:3000/api/invoices/${invoiceId}/payment-status`,
+  //       {
+  //         method: 'PATCH',
+  //         headers: {
+  //           Authorization: `Bearer ${token}`,
+  //           'Content-Type': 'application/json',
+  //         },
+  //         body: JSON.stringify({ trangthai_thanhtoan: newStatus }),
+  //       }
+  //     );
 
-      if (!response.ok) {
-        throw new Error('Failed to update payment status');
-      }
+  //     if (!response.ok) {
+  //       throw new Error('Failed to update payment status');
+  //     }
 
-      const data = await response.json();
-      if (data.success) {
-        fetchInvoices();
-        fetchInvoiceStats();
-      } else {
-        throw new Error(data.message || 'Lỗi khi cập nhật trạng thái');
-      }
-    };
+  //     const data = await response.json();
+  //     if (data.success) {
+  //       fetchInvoices();
+  //       fetchInvoiceStats();
+  //     } else {
+  //       throw new Error(data.message || 'Lỗi khi cập nhật trạng thái');
+  //     }
+  //   };
 
-    try {
-      await showLoadingToast(updateOperation(), {
-        pending: 'Đang cập nhật trạng thái thanh toán...',
-        success: 'Cập nhật trạng thái thanh toán thành công!',
-        error: 'Lỗi khi cập nhật trạng thái thanh toán',
-      });
-    } catch (error) {
-      console.error('Error:', error);
-      showValidationError(error);
-    }
-  };
+  //   try {
+  //     await showLoadingToast(updateOperation(), {
+  //       pending: 'Đang cập nhật trạng thái thanh toán...',
+  //       success: 'Cập nhật trạng thái thanh toán thành công!',
+  //       error: 'Lỗi khi cập nhật trạng thái thanh toán',
+  //     });
+  //   } catch (error) {
+  //     console.error('Error:', error);
+  //     showValidationError(error);
+  //   }
+  // };
 
   const handleEditInvoice = (invoice) => {
     setEditingInvoice(invoice);

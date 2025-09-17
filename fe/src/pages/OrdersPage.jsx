@@ -3,7 +3,6 @@ import './OrdersPage.scss';
 import { FaPlus, FaEdit, FaTrash, FaCheck, FaMinus } from 'react-icons/fa';
 import Modal from '../components/Modal';
 import {
-  showSuccess,
   showError,
   showLoadingToast,
   showValidationError,

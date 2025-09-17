@@ -3,8 +3,6 @@ import { tableAPI } from '../services/api';
 import Modal from '../components/Modal';
 import Button from '../components/Button';
 import {
-  showSuccess,
-  showError,
   showLoadingToast,
   showValidationError,
 } from '../utils/toast';
