@@ -23,7 +23,6 @@ Backend API cho hệ thống quản lý nhà hàng buffet, hỗ trợ đặt bà
 ### 1. Clone dự án
 ```bash
 git clone <repository-url>
-cd buffet-restaurant-backend
 ```
 
 ### 2. Cài đặt dependencies
@@ -62,14 +61,10 @@ NODE_ENV=development
 
 ### 5. Khởi chạy server
 
-#### Development mode
-```bash
-npm run dev
-```
 
-#### Production mode
+#### Local mode
 ```bash
-npm start
+npm run start
 ```
 
 Server sẽ chạy tại: `http://localhost:3000`
@@ -100,8 +95,6 @@ Authorization: Bearer <token>
 
 **Auth**
 - `POST /api/auth/login` - Đăng nhập
-- `GET /api/auth/profile` - Thông tin profile
-- `PUT /api/auth/change-password` - Đổi mật khẩu
 
 **Bookings**
 - `GET /api/bookings` - Danh sách đặt bàn
@@ -182,28 +175,14 @@ Authorization: Bearer <token>
 ## 📊 Database Schema
 
 Hệ thống sử dụng PostgreSQL với các bảng chính:
-- `hangthanhvien` - Hạng thành viên
-- `khachhang` - Khách hàng
 - `vung`, `ban` - Vùng và bàn
 - `vai_tro`, `quyen`, `nhanvien` - Nhân viên và phân quyền
 - `phieudatban` - Phiếu đặt bàn
 - `danhmucmonan`, `monan` - Thực đơn
 - `setbuffet` - Set buffet
-- `khuyenmai` - Khuyến mãi
 - `hoadon`, `thanhtoan` - Hóa đơn và thanh toán
 
-## 🔧 Scripts
 
-```bash
-# Chạy development server
-npm run dev
-
-# Chạy production server
-npm start
-
-# Chạy tests
-npm test
-```
 
 ## 🌟 Tính năng nổi bật
 
