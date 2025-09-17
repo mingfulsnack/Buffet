@@ -3,6 +3,12 @@ import { employeeAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
+import {
+  showSuccess,
+  showError,
+  showLoadingToast,
+  showValidationError,
+} from '../utils/toast';
 import './EmployeesPage.scss';
 
 const EmployeesPage = () => {
@@ -164,7 +170,8 @@ const EmployeesPage = () => {
     if (!validateForm()) return;
 
     setSubmitting(true);
-    try {
+
+    const saveEmployee = async () => {
       const submitData = { ...employeeForm };
 
       // Remove password if empty during edit
@@ -192,6 +199,18 @@ const EmployeesPage = () => {
 
       setShowModal(false);
       resetForm();
+    };
+
+    try {
+      await showLoadingToast(saveEmployee(), {
+        pending: editingEmployee
+          ? 'Đang cập nhật nhân viên...'
+          : 'Đang tạo nhân viên mới...',
+        success: editingEmployee
+          ? 'Cập nhật nhân viên thành công!'
+          : 'Tạo nhân viên mới thành công!',
+        error: 'Có lỗi xảy ra khi lưu nhân viên',
+      });
     } catch (error) {
       console.error('Error saving employee:', error);
       if (error.response?.data?.details) {
@@ -203,7 +222,7 @@ const EmployeesPage = () => {
         });
         setErrors(backendErrors);
       } else {
-        alert('Có lỗi xảy ra khi lưu nhân viên');
+        showValidationError(error);
       }
     } finally {
       setSubmitting(false);
@@ -213,14 +232,22 @@ const EmployeesPage = () => {
   const handleDeleteEmployee = async (employeeId) => {
     if (!confirm('Bạn có chắc chắn muốn xóa nhân viên này?')) return;
 
-    try {
+    const deleteEmployee = async () => {
       await employeeAPI.deleteEmployee(employeeId);
 
       // Remove employee from local state
       setEmployees((prev) => prev.filter((emp) => emp.manv !== employeeId));
+    };
+
+    try {
+      await showLoadingToast(deleteEmployee(), {
+        pending: 'Đang xóa nhân viên...',
+        success: 'Xóa nhân viên thành công!',
+        error: 'Có lỗi xảy ra khi xóa nhân viên',
+      });
     } catch (error) {
       console.error('Error deleting employee:', error);
-      alert('Có lỗi xảy ra khi xóa nhân viên');
+      showValidationError(error);
     }
   };
 

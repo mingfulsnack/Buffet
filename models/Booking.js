@@ -107,7 +107,7 @@ class Booking extends BaseModel {
         INSERT INTO ${this.tableName} (
           makh, guest_hoten, guest_sodienthoai, guest_email, maban, songuoi,
           thoigian_dat, trangthai, nguon_dat, booking_token, cancel_deadline, ghichu
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, 'DaDat', 'Online', $8, $9, $10)
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING *
       `,
         [
@@ -118,6 +118,8 @@ class Booking extends BaseModel {
           maban,
           songuoi,
           thoigian_dat,
+          'DaDat',
+          'Online',
           bookingToken,
           cancelDeadline,
           ghichu,
@@ -320,10 +322,9 @@ class Booking extends BaseModel {
       );
 
       // XÓA booking khỏi database - cascade sẽ tự động xóa lịch sử
-      await client.query(
-        `DELETE FROM ${this.tableName} WHERE maphieu = $1`,
-        [id]
-      );
+      await client.query(`DELETE FROM ${this.tableName} WHERE maphieu = $1`, [
+        id,
+      ]);
 
       return true;
     });
@@ -501,8 +502,11 @@ class Booking extends BaseModel {
          AND auto_delete_at <= NOW()
          RETURNING maphieu`
       );
-      
-      console.log(`Cleaned up ${result.rows.length} cancelled bookings:`, result.rows.map(r => r.maphieu));
+
+      console.log(
+        `Cleaned up ${result.rows.length} cancelled bookings:`,
+        result.rows.map((r) => r.maphieu)
+      );
       return result.rows.length;
     } catch (error) {
       console.error('Error cleaning up cancelled bookings:', error);

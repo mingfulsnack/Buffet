@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { tableAPI } from '../services/api';
 import Modal from '../components/Modal';
 import Button from '../components/Button';
+import {
+  showSuccess,
+  showError,
+  showLoadingToast,
+  showValidationError,
+} from '../utils/toast';
 import './TablesPage.scss';
 
 const TablesPage = () => {
@@ -153,7 +159,8 @@ const TablesPage = () => {
   // Lưu bàn (tạo mới hoặc cập nhật)
   const handleSaveTable = async (e) => {
     e.preventDefault();
-    try {
+
+    const saveOperation = async () => {
       const tableData = {
         ...formData,
         soghe: parseInt(formData.soghe),
@@ -175,31 +182,46 @@ const TablesPage = () => {
 
         // Cập nhật thông tin bàn
         await tableAPI.updateTable(editingTable.maban, tableData);
-        alert('Cập nhật bàn thành công!');
       } else {
         await tableAPI.createTable(tableData);
-        alert('Tạo bàn mới thành công!');
       }
 
       setIsModalOpen(false);
       resetForm();
       loadTables();
+    };
+
+    try {
+      await showLoadingToast(saveOperation(), {
+        pending: editingTable ? 'Đang cập nhật bàn...' : 'Đang tạo bàn mới...',
+        success: editingTable
+          ? 'Cập nhật bàn thành công!'
+          : 'Tạo bàn mới thành công!',
+        error: 'Có lỗi xảy ra khi lưu bàn',
+      });
     } catch (err) {
       console.error('Error saving table:', err);
-      alert(err.response?.data?.message || 'Có lỗi xảy ra khi lưu bàn');
+      showValidationError(err);
     }
   };
 
   // Xóa bàn
   const handleDeleteTable = async (table) => {
     if (window.confirm(`Bạn có chắc chắn muốn xóa bàn ${table.tenban}?`)) {
-      try {
+      const deleteOperation = async () => {
         await tableAPI.deleteTable(table.maban);
-        alert('Xóa bàn thành công!');
         loadTables();
+      };
+
+      try {
+        await showLoadingToast(deleteOperation(), {
+          pending: 'Đang xóa bàn...',
+          success: 'Xóa bàn thành công!',
+          error: 'Có lỗi xảy ra khi xóa bàn',
+        });
       } catch (err) {
         console.error('Error deleting table:', err);
-        alert(err.response?.data?.message || 'Có lỗi xảy ra khi xóa bàn');
+        showValidationError(err);
       }
     }
   };

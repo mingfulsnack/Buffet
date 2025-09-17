@@ -7,6 +7,12 @@ import DishForm from '../../components/menu/DishForm';
 import CategoryForm from '../../components/menu/CategoryForm';
 import CategoryFormContent from '../../components/menu/CategoryFormContent';
 import BuffetSetForm from '../../components/menu/BuffetSetForm';
+import {
+  showSuccess,
+  showError,
+  showLoadingToast,
+  showValidationError,
+} from '../../utils/toast';
 import './AdminMenuPage.scss';
 
 const AdminMenuPage = () => {
@@ -171,7 +177,7 @@ const AdminMenuPage = () => {
   const handleDeleteItem = async (type, id) => {
     if (!confirm('Bạn có chắc chắn muốn xóa?')) return;
 
-    try {
+    const deleteOperation = async () => {
       if (type === 'dish') {
         await menuAPI.deleteDish(id);
         setDishes((prev) => prev.filter((dish) => dish.mamon !== id));
@@ -186,21 +192,23 @@ const AdminMenuPage = () => {
           setSelectedCategory('');
         }
       }
+    };
+
+    const typeNames = {
+      dish: 'món ăn',
+      buffet: 'set buffet',
+      category: 'danh mục',
+    };
+
+    try {
+      await showLoadingToast(deleteOperation(), {
+        pending: `Đang xóa ${typeNames[type]}...`,
+        success: `Xóa ${typeNames[type]} thành công!`,
+        error: `Có lỗi xảy ra khi xóa ${typeNames[type]}`,
+      });
     } catch (error) {
       console.error(`Error deleting ${type}:`, error);
-
-      // Hiển thị message cụ thể từ server nếu có
-      const errorMessage =
-        error.response?.data?.message ||
-        `Có lỗi xảy ra khi xóa ${
-          type === 'dish'
-            ? 'món ăn'
-            : type === 'buffet'
-            ? 'set buffet'
-            : 'danh mục'
-        }`;
-
-      alert(errorMessage);
+      showValidationError(error);
     }
   };
 
@@ -211,6 +219,21 @@ const AdminMenuPage = () => {
   };
 
   const handleSaveSuccess = async (savedItem) => {
+    const typeNames = {
+      dish: editingItem
+        ? 'Cập nhật món ăn thành công!'
+        : 'Thêm món ăn thành công!',
+      buffet: editingItem
+        ? 'Cập nhật set buffet thành công!'
+        : 'Thêm set buffet thành công!',
+      category: editingItem
+        ? 'Cập nhật danh mục thành công!'
+        : 'Thêm danh mục thành công!',
+      'buffet-category': editingItem
+        ? 'Cập nhật danh mục buffet thành công!'
+        : 'Thêm danh mục buffet thành công!',
+    };
+
     if (modalType === 'dish') {
       if (editingItem) {
         setDishes((prev) =>
@@ -252,6 +275,8 @@ const AdminMenuPage = () => {
         setBuffetCategories((prev) => [...prev, savedItem]);
       }
     }
+
+    showSuccess(typeNames[modalType]);
     handleModalClose();
   };
 

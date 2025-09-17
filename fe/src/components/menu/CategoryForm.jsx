@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Modal from '../Modal';
 import Button from '../Button';
 import { menuAPI } from '../../services/api';
+import { showValidationError } from '../../utils/toast';
 import './CategoryForm.scss';
 
 const CategoryForm = ({ category, isOpen, onClose, onSuccess }) => {
@@ -74,6 +75,7 @@ const CategoryForm = ({ category, isOpen, onClose, onSuccess }) => {
       }
     } catch (error) {
       console.error('Error saving category:', error);
+      showValidationError(error);
       if (error.response?.data?.message) {
         setErrors({ general: error.response.data.message });
       } else {

@@ -7,7 +7,7 @@ const validate = (schema) => {
       return res.status(400).json({
         success: false,
         message: 'Validation error',
-        details: error.details.map(detail => detail.message)
+        details: error.details.map((detail) => detail.message),
       });
     }
     next();
@@ -19,7 +19,7 @@ const schemas = {
   // Đăng nhập
   login: Joi.object({
     tendangnhap: Joi.string().required(),
-    matkhau: Joi.string().required()
+    matkhau: Joi.string().required(),
   }),
 
   // Nhân viên
@@ -31,17 +31,19 @@ const schemas = {
     sodienthoai: Joi.string().pattern(/^[0-9]{10,11}$/),
     email: Joi.string().email(),
     calam: Joi.string().max(100),
-    is_active: Joi.boolean()
+    is_active: Joi.boolean(),
   }),
 
   // Khách hàng
   customer: Joi.object({
     hoten: Joi.string().min(2).max(100).required(),
     gioitinh: Joi.string().valid('Nam', 'Nữ', 'Khác'),
-    sodienthoai: Joi.string().pattern(/^[0-9]{10,11}$/).required(),
+    sodienthoai: Joi.string()
+      .pattern(/^[0-9]{10,11}$/)
+      .required(),
     email: Joi.string().email(),
     diachi: Joi.string(),
-    mahang: Joi.number().integer().positive()
+    mahang: Joi.number().integer().positive(),
   }),
 
   // Đặt bàn
@@ -53,7 +55,7 @@ const schemas = {
     maban: Joi.number().integer().positive().required(),
     songuoi: Joi.number().integer().min(1).max(20).required(),
     thoigian_dat: Joi.date().iso().required(),
-    ghichu: Joi.string()
+    ghichu: Joi.string(),
   }).or('makh', 'guest_hoten'), // Phải có ít nhất một trong hai
 
   // Bàn
@@ -63,7 +65,7 @@ const schemas = {
     soghe: Joi.number().integer().min(1).max(20).required(),
     vitri: Joi.string().max(200),
     trangthai: Joi.string().valid('Trong', 'DaDat', 'DangSuDung', 'Lock'),
-    ghichu: Joi.string()
+    ghichu: Joi.string(),
   }),
 
   // Món ăn
@@ -73,8 +75,8 @@ const schemas = {
     dongia: Joi.number().min(0).required(),
     trangthai: Joi.string().valid('Con', 'Het'),
     is_addon: Joi.boolean(),
-    ghichu: Joi.string(),
-    image: Joi.string().allow(null, '')
+    ghichu: Joi.string().allow(null, ''),
+    image: Joi.string().allow(null, ''),
   }),
 
   // Set buffet
@@ -85,7 +87,7 @@ const schemas = {
     thoigian_ketthuc: Joi.string().pattern(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/),
     mota: Joi.string(),
     trangthai: Joi.string().valid('HoatDong', 'TamNgung'),
-    image: Joi.string().allow(null, '')
+    image: Joi.string().allow(null, ''),
   }),
 
   // Khuyến mãi
@@ -96,11 +98,11 @@ const schemas = {
     ngay_batdau: Joi.date().iso().required(),
     ngay_ketthuc: Joi.date().iso().required(),
     dieu_kien: Joi.object(),
-    is_active: Joi.boolean()
-  })
+    is_active: Joi.boolean(),
+  }),
 };
 
 module.exports = {
   validate,
-  schemas
+  schemas,
 };

@@ -25,7 +25,7 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="hero-image">
-          <img src="/api/placeholder/600/400" alt="Buffet Restaurant" />
+          <img src="src/assets/loginpage.png" alt="Buffet Restaurant" />
         </div>
       </section>
 

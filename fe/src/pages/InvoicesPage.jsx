@@ -2,6 +2,12 @@ import React, { useState, useEffect } from 'react';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import {
+  showSuccess,
+  showError,
+  showLoadingToast,
+  showValidationError,
+} from '../utils/toast';
 import './InvoicesPage.scss';
 
 const InvoicesPage = () => {
@@ -89,7 +95,7 @@ const InvoicesPage = () => {
       return;
     }
 
-    try {
+    const updateOperation = async () => {
       const token = localStorage.getItem('token');
       const response = await fetch(
         `http://localhost:3000/api/invoices/${invoiceId}/payment-status`,
@@ -111,13 +117,20 @@ const InvoicesPage = () => {
       if (data.success) {
         fetchInvoices();
         fetchInvoiceStats();
-        alert('Cập nhật trạng thái thanh toán thành công!');
       } else {
-        alert(data.message || 'Lỗi khi cập nhật trạng thái');
+        throw new Error(data.message || 'Lỗi khi cập nhật trạng thái');
       }
+    };
+
+    try {
+      await showLoadingToast(updateOperation(), {
+        pending: 'Đang cập nhật trạng thái thanh toán...',
+        success: 'Cập nhật trạng thái thanh toán thành công!',
+        error: 'Lỗi khi cập nhật trạng thái thanh toán',
+      });
     } catch (error) {
       console.error('Error:', error);
-      alert('Lỗi khi cập nhật trạng thái thanh toán');
+      showValidationError(error);
     }
   };
 
@@ -140,8 +153,9 @@ const InvoicesPage = () => {
   };
 
   const handleSubmitUpdate = async () => {
-    try {
-      setSubmitting(true);
+    setSubmitting(true);
+
+    const updateOperation = async () => {
       const token = localStorage.getItem('token');
 
       const response = await fetch(
@@ -173,13 +187,20 @@ const InvoicesPage = () => {
         setShowUpdateModal(false);
         fetchInvoices();
         fetchInvoiceStats();
-        alert('Cập nhật hóa đơn thành công!');
       } else {
-        alert(data.message || 'Lỗi khi cập nhật hóa đơn');
+        throw new Error(data.message || 'Lỗi khi cập nhật hóa đơn');
       }
+    };
+
+    try {
+      await showLoadingToast(updateOperation(), {
+        pending: 'Đang cập nhật hóa đơn...',
+        success: 'Cập nhật hóa đơn thành công!',
+        error: 'Lỗi khi cập nhật hóa đơn',
+      });
     } catch (error) {
       console.error('Error:', error);
-      alert('Lỗi khi cập nhật hóa đơn');
+      showValidationError(error);
     } finally {
       setSubmitting(false);
     }

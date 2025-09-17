@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { showSuccess, showValidationError } from '../utils/toast';
 import './Login.scss';
 
 const Login = () => {
@@ -44,12 +45,14 @@ const Login = () => {
 
         // Pass employee as user to login function
         login(employee, token);
+        showSuccess('Đăng nhập thành công!');
         navigate(from, { replace: true });
       } else {
         setError(response.data.message || 'Đăng nhập thất bại');
       }
     } catch (error) {
       console.error('Login error:', error);
+      showValidationError(error);
       setError(
         error.response?.data?.message ||
           'Có lỗi xảy ra khi đăng nhập. Vui lòng thử lại.'

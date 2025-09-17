@@ -3,6 +3,12 @@ import { bookingAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
+import {
+  showSuccess,
+  showError,
+  showLoadingToast,
+  showValidationError,
+} from '../utils/toast';
 import './AdminBookingsPage.scss';
 
 const AdminBookingsPage = () => {
@@ -61,7 +67,8 @@ const AdminBookingsPage = () => {
     if (!selectedBooking || !cancelReason.trim()) return;
 
     setSubmitting(true);
-    try {
+
+    const cancelOperation = async () => {
       await bookingAPI.cancelBooking(selectedBooking.maphieu, cancelReason);
 
       // Update booking status in local state
@@ -76,16 +83,24 @@ const AdminBookingsPage = () => {
       setShowCancelModal(false);
       setSelectedBooking(null);
       setCancelReason('');
+    };
+
+    try {
+      await showLoadingToast(cancelOperation(), {
+        pending: 'Đang hủy đặt bàn...',
+        success: 'Hủy đặt bàn thành công!',
+        error: 'Có lỗi xảy ra khi hủy đặt bàn',
+      });
     } catch (error) {
       console.error('Error canceling booking:', error);
-      alert('Có lỗi xảy ra khi hủy đặt bàn');
+      showValidationError(error);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleConfirmBooking = async (bookingId) => {
-    try {
+    const confirmOperation = async () => {
       await bookingAPI.confirmBooking(bookingId);
 
       // Update booking status in local state
@@ -96,9 +111,17 @@ const AdminBookingsPage = () => {
             : booking
         )
       );
+    };
+
+    try {
+      await showLoadingToast(confirmOperation(), {
+        pending: 'Đang xác nhận đặt bàn...',
+        success: 'Xác nhận đặt bàn thành công!',
+        error: 'Có lỗi xảy ra khi xác nhận đặt bàn',
+      });
     } catch (error) {
       console.error('Error confirming booking:', error);
-      alert('Có lỗi xảy ra khi xác nhận đặt bàn');
+      showValidationError(error);
     }
   };
 
@@ -212,7 +235,8 @@ const AdminBookingsPage = () => {
                       {booking.trangthai === 'DaDat' && (
                         <>
                           <Button
-                            variant="save"
+                            variant="edit"
+                            size="small"
                             onClick={() =>
                               handleConfirmBooking(booking.maphieu)
                             }
@@ -221,6 +245,7 @@ const AdminBookingsPage = () => {
                           </Button>
                           <Button
                             variant="delete"
+                            size="small"
                             onClick={() => {
                               setSelectedBooking(booking);
                               setShowCancelModal(true);
@@ -274,7 +299,7 @@ const AdminBookingsPage = () => {
 
           <div className="modal-actions">
             <Button
-              variant="secondary"
+              variant="cancel"
               onClick={() => {
                 setShowCancelModal(false);
                 setSelectedBooking(null);
@@ -284,7 +309,7 @@ const AdminBookingsPage = () => {
               Đóng
             </Button>
             <Button
-              variant="danger"
+              variant="delete"
               onClick={handleCancelBooking}
               disabled={!cancelReason.trim() || submitting}
             >

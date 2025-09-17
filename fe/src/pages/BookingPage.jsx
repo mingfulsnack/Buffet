@@ -3,6 +3,12 @@ import { tableAPI, bookingAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
+import {
+  showSuccess,
+  showError,
+  showLoadingToast,
+  showValidationError,
+} from '../utils/toast';
 import './BookingPage.scss';
 
 const BookingPage = () => {
@@ -196,7 +202,8 @@ const BookingPage = () => {
     }
 
     setSubmitting(true);
-    try {
+
+    const createBooking = async () => {
       // Convert datetime-local to ISO string
       const bookingDateTime = new Date(bookingForm.thoigian_dat);
 
@@ -235,8 +242,17 @@ const BookingPage = () => {
         // Reload tables
         reloadTables();
       }
+    };
+
+    try {
+      await showLoadingToast(createBooking(), {
+        pending: 'Đang tạo đặt bàn...',
+        success: 'Đặt bàn thành công!',
+        error: 'Có lỗi xảy ra khi đặt bàn',
+      });
     } catch (error) {
       console.error('Error creating booking:', error);
+      showValidationError(error);
       if (error.response?.data?.message) {
         setErrors({ general: error.response.data.message });
       } else {
@@ -336,9 +352,9 @@ const BookingPage = () => {
                           <div className="table-capacity">
                             {table.soghe} ghế
                           </div>
-                          {table.vitri && (
+                          {/* {table.vitri && (
                             <div className="table-location">{table.vitri}</div>
-                          )}
+                          )} */}
                         </div>
                       ))}
                     </div>
@@ -376,11 +392,11 @@ const BookingPage = () => {
                 <span className="table-capacity">
                   Sức chứa: {selectedTable?.soghe} người
                 </span>
-                {selectedTable?.vitri && (
+                {/* {selectedTable?.vitri && (
                   <span className="table-location">
                     Vị trí: {selectedTable.vitri}
                   </span>
-                )}
+                )} */}
               </div>
             </div>
 
@@ -518,12 +534,12 @@ const BookingPage = () => {
                   <span className="label">Sức chứa:</span>
                   <span className="value">{selectedTable?.soghe} người</span>
                 </div>
-                {selectedTable?.vitri && (
+                {/* {selectedTable?.vitri && (
                   <div className="info-row">
                     <span className="label">Vị trí:</span>
                     <span className="value">{selectedTable.vitri}</span>
                   </div>
-                )}
+                )} */}
               </div>
 
               <div className="summary-section">

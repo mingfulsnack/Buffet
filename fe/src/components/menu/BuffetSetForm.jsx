@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { menuAPI } from '../../services/api';
 import Button from '../Button';
+import { showValidationError } from '../../utils/toast';
 import './BuffetSetForm.scss';
 
 const BuffetSetForm = ({
@@ -112,6 +113,7 @@ const BuffetSetForm = ({
       }
     } catch (error) {
       console.error('Error saving buffet set:', error);
+      showValidationError(error);
       if (error.response?.data?.details) {
         const backendErrors = {};
         error.response.data.details.forEach((detail) => {
@@ -119,8 +121,6 @@ const BuffetSetForm = ({
           backendErrors[field] = detail;
         });
         setErrors(backendErrors);
-      } else {
-        alert('Có lỗi xảy ra khi lưu set buffet');
       }
     } finally {
       setLoading(false);

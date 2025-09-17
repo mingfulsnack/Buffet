@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Button from '../Button';
 import { menuAPI } from '../../services/api';
+import { showValidationError } from '../../utils/toast';
 import './DishForm.scss';
 
 const DishForm = ({ categories, editingDish, onSave, onCancel }) => {
@@ -103,11 +104,7 @@ const DishForm = ({ categories, editingDish, onSave, onCancel }) => {
       }
     } catch (error) {
       console.error('Error saving dish:', error);
-      if (error.response?.data?.message) {
-        setErrors({ general: error.response.data.message });
-      } else {
-        setErrors({ general: 'Có lỗi xảy ra khi lưu món ăn' });
-      }
+      showValidationError(error);
     } finally {
       setLoading(false);
     }
