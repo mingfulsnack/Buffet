@@ -178,6 +178,8 @@ const getBuffetSets = async (req, res) => {
 // Tạo set buffet mới
 const createBuffetSet = async (req, res) => {
   try {
+    console.log('Create buffet set request body:', req.body);
+
     const {
       tenset,
       dongia,
@@ -200,6 +202,8 @@ const createBuffetSet = async (req, res) => {
       madanhmuc,
     };
 
+    console.log('Buffet set data to create:', buffetSetData);
+
     const buffetSet = await Menu.createBuffetSet(buffetSetData);
 
     res
@@ -207,7 +211,15 @@ const createBuffetSet = async (req, res) => {
       .json(formatResponse(true, buffetSet, 'Tạo set buffet thành công'));
   } catch (error) {
     console.error('Create buffet set error:', error);
-    res.status(500).json(formatErrorResponse('Lỗi server'));
+    if (error.code === '23505') {
+      res.status(400).json(formatErrorResponse('Tên set buffet đã tồn tại'));
+    } else if (error.code === '23503') {
+      res
+        .status(400)
+        .json(formatErrorResponse('Danh mục buffet không tồn tại'));
+    } else {
+      res.status(500).json(formatErrorResponse('Lỗi server'));
+    }
   }
 };
 
@@ -259,10 +271,12 @@ const deleteBuffetSet = async (req, res) => {
       'SELECT * FROM setbuffet WHERE maset = $1',
       [id]
     );
-    
+
     if (checkResult.rows.length === 0) {
       console.log('Buffet set not found:', id);
-      return res.status(404).json(formatErrorResponse('Không tìm thấy set buffet'));
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy set buffet'));
     }
 
     // Xóa set buffet (hard delete with cascade)
@@ -270,7 +284,9 @@ const deleteBuffetSet = async (req, res) => {
     console.log('Delete buffet set result:', result);
 
     if (!result) {
-      return res.status(404).json(formatErrorResponse('Không tìm thấy set buffet'));
+      return res
+        .status(404)
+        .json(formatErrorResponse('Không tìm thấy set buffet'));
     }
 
     res.json(formatResponse(true, null, 'Xóa set buffet thành công'));

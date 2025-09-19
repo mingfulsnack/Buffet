@@ -32,16 +32,16 @@ const DishForm = ({ categories, editingDish, onSave, onCancel }) => {
     }
   }, [editingDish]);
 
-  const loadCategories = async () => {
-    try {
-      const response = await menuAPI.getCategories();
-      if (response.data.success) {
-        // Categories are passed as props, no need to load
-      }
-    } catch (error) {
-      console.error('Error loading categories:', error);
-    }
-  };
+  // const loadCategories = async () => {
+  //   try {
+  //     const response = await menuAPI.getCategories();
+  //     if (response.data.success) {
+  //       // Categories are passed as props, no need to load
+  //     }
+  //   } catch (error) {
+  //     console.error('Error loading categories:', error);
+  //   }
+  // };
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;

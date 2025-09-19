@@ -294,10 +294,10 @@ class Table extends BaseModel {
     const result = await this.query(
       `
       SELECT COUNT(*) as count
-      FROM datban 
+      FROM phieudatban 
       WHERE maban = $1 
       AND trangthai IN ('ChoXacNhan', 'DaXacNhan')
-      AND ngaydat >= CURRENT_DATE
+      AND thoigian_dat >= CURRENT_DATE
     `,
       [maban]
     );
