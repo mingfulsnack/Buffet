@@ -5,6 +5,14 @@ const menuController = require('../controllers/menuController');
 const bookingController = require('../controllers/bookingController');
 const tableController = require('../controllers/tableController');
 
+// Middleware to prevent caching for public routes
+router.use((req, res, next) => {
+  res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.set('Pragma', 'no-cache');
+  res.set('Expires', '0');
+  next();
+});
+
 // Routes public - không cần đăng nhập
 
 // Lấy thực đơn public

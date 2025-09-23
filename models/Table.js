@@ -220,8 +220,8 @@ class Table extends BaseModel {
       SELECT * FROM phieudatban 
       WHERE maban = $1 
         AND trangthai IN ('DaDat', 'DaXacNhan', 'DangSuDung')
-        AND thoigian_dat <= $2 + INTERVAL '2 hours'
-        AND thoigian_dat + INTERVAL '2 hours' >= $2
+        AND thoigian_dat <= $2::timestamp + INTERVAL '2 hours'
+        AND thoigian_dat + INTERVAL '2 hours' >= $2::timestamp
     `,
       [maban, thoigian_dat]
     );
@@ -247,8 +247,8 @@ class Table extends BaseModel {
             SELECT 1 FROM phieudatban p 
             WHERE p.maban = b.maban 
               AND p.trangthai = 'DangSuDung'
-              AND p.thoigian_dat <= $2
-              AND (p.thoigian_dat + INTERVAL '2 hours') > $2
+              AND p.thoigian_dat <= $2::timestamp
+              AND (p.thoigian_dat + INTERVAL '2 hours') > $2::timestamp
           ) THEN 'DangSuDung'
           
           -- Nếu có đặt bàn trong khoảng thời gian check (30 phút trước đến 2 giờ sau)
@@ -256,8 +256,8 @@ class Table extends BaseModel {
             SELECT 1 FROM phieudatban p 
             WHERE p.maban = b.maban 
               AND p.trangthai IN ('DaXacNhan', 'DaDat')
-              AND p.thoigian_dat <= $2 + INTERVAL '30 minutes'
-              AND (p.thoigian_dat + INTERVAL '2 hours') > $2
+              AND p.thoigian_dat <= $2::timestamp + INTERVAL '30 minutes'
+              AND (p.thoigian_dat + INTERVAL '2 hours') > $2::timestamp
           ) THEN 'DaDat'
           
           -- Nếu bàn bị khóa hoặc bảo trì
@@ -280,8 +280,8 @@ class Table extends BaseModel {
           FROM phieudatban p 
           WHERE p.maban = b.maban 
             AND p.trangthai IN ('DaXacNhan', 'DaDat', 'DangSuDung')
-            AND p.thoigian_dat <= $2 + INTERVAL '4 hours'
-            AND (p.thoigian_dat + INTERVAL '2 hours') > $2
+            AND p.thoigian_dat <= $2::timestamp + INTERVAL '4 hours'
+            AND (p.thoigian_dat + INTERVAL '2 hours') > $2::timestamp
           ORDER BY p.thoigian_dat ASC
           LIMIT 1
         ) as thong_tin_dat_ban
@@ -319,8 +319,8 @@ class Table extends BaseModel {
               AND p.trangthai IN ('DaXacNhan', 'DaDat', 'DangSuDung')
               -- Kiểm tra overlap: đặt bàn mới có giao với đặt bàn hiện tại không
               AND NOT (
-                $1 + INTERVAL '2 hours' <= p.thoigian_dat OR 
-                $1 >= p.thoigian_dat + INTERVAL '2 hours'
+                $1::timestamp + INTERVAL '2 hours' <= p.thoigian_dat OR 
+                $1::timestamp >= p.thoigian_dat + INTERVAL '2 hours'
               )
           ) THEN false
           

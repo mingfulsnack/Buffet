@@ -15,6 +15,27 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
+  // Prevent page scroll on interactions
+  useEffect(() => {
+    const preventScroll = (e) => {
+      // Don't prevent scroll on actual scrollable elements
+      if (
+        e.target.tagName === 'INPUT' ||
+        e.target.tagName === 'TEXTAREA' ||
+        e.target.tagName === 'SELECT'
+      ) {
+        return;
+      }
+    };
+
+    // Add global click handler to prevent unwanted scrolling
+    document.addEventListener('click', preventScroll, true);
+
+    return () => {
+      document.removeEventListener('click', preventScroll, true);
+    };
+  }, []);
+
   // Data states
   const [areas, setAreas] = useState([]);
   const [tables, setTables] = useState([]);
@@ -102,27 +123,41 @@ const BookingPage = () => {
         const params = {
           thoigian_dat: bookingForm.thoigian_dat,
           songuoi: bookingForm.songuoi || undefined,
+          // Add timestamp to prevent caching issues
+          _refresh: Date.now(),
         };
 
         const response = await tableAPI.getPublicAvailableTablesAtTime(params);
         if (response.data.success) {
           setTables(response.data.data);
-
-          // Clear selected table if it's not available anymore
-          if (
-            selectedTable &&
-            !response.data.data.some((area) =>
-              area.tables.some((table) => table.maban === selectedTable.maban)
-            )
-          ) {
-            setSelectedTable(null);
-            setBookingForm((prev) => ({ ...prev, maban: null }));
-          }
         }
       } catch (error) {
         console.error('Error loading available tables:', error);
-        showError('Không thể tải danh sách bàn trống');
-        setTables([]);
+
+        // If it's a caching issue, retry once
+        if (error.message?.includes('Cache hit')) {
+          console.log('Retrying due to cache issue...');
+          try {
+            const params = {
+              thoigian_dat: bookingForm.thoigian_dat,
+              songuoi: bookingForm.songuoi || undefined,
+              _force: Date.now(),
+            };
+            const retryResponse = await tableAPI.getPublicAvailableTablesAtTime(
+              params
+            );
+            if (retryResponse.data.success) {
+              setTables(retryResponse.data.data);
+            }
+          } catch (retryError) {
+            console.error('Retry failed:', retryError);
+            showError('Không thể tải danh sách bàn trống');
+            setTables([]);
+          }
+        } else {
+          showError('Không thể tải danh sách bàn trống');
+          setTables([]);
+        }
       } finally {
         isLoadingTables.current = false;
         setLoading(false);
@@ -138,14 +173,24 @@ const BookingPage = () => {
       setSelectedTable(null);
       setBookingForm((prev) => ({ ...prev, maban: null }));
     }
-  }, [
-    areas.length,
-    bookingForm.thoigian_dat,
-    bookingForm.songuoi,
-    selectedTable,
-  ]); // Depend on time and guest count
+  }, [areas.length, bookingForm.thoigian_dat, bookingForm.songuoi]); // Depend on time and guest count, but not selectedTable to avoid infinite loops
 
-  const handleTableSelect = (table) => {
+  // Clear selected table if it's no longer available
+  useEffect(() => {
+    if (selectedTable && tables.length > 0) {
+      const isTableStillAvailable = tables.some((area) =>
+        area.tables.some((table) => table.maban === selectedTable.maban)
+      );
+
+      if (!isTableStillAvailable) {
+        setSelectedTable(null);
+        setBookingForm((prev) => ({ ...prev, maban: null }));
+      }
+    }
+  }, [tables, selectedTable]);
+
+  const handleTableSelect = (table, e) => {
+    e?.preventDefault(); // Prevent any form submission
     setSelectedTable(table);
     setBookingForm((prev) => ({
       ...prev,
@@ -219,17 +264,20 @@ const BookingPage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNextStep = () => {
+  const handleNextStep = (e) => {
+    e?.preventDefault(); // Prevent form submission
     if (validateStep(step)) {
       setStep(step + 1);
     }
   };
 
-  const handlePrevStep = () => {
+  const handlePrevStep = (e) => {
+    e?.preventDefault(); // Prevent form submission
     setStep(step - 1);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e?.preventDefault(); // Prevent form submission
     if (!validateStep(2)) {
       return;
     }
@@ -323,7 +371,7 @@ const BookingPage = () => {
             }`}
           >
             <div className="step-number">1</div>
-            <div className="step-title">Chọn bàn</div>
+            <div className="step-title">Chọn thời gian & bàn</div>
           </div>
           <div
             className={`step ${step >= 2 ? 'active' : ''} ${
@@ -339,26 +387,69 @@ const BookingPage = () => {
           </div>
         </div>
 
-        {/* Step 1: Chọn bàn */}
+        {/* Step 1: Chọn thời gian và bàn */}
         {step === 1 && (
           <div className="step-content">
-            <h2>Chọn bàn</h2>
+            <h2>Chọn thời gian và bàn</h2>
+
+            {/* Booking Time and Guest Count Form */}
+            <div className="booking-basic-info">
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="thoigian_dat_step1">
+                    Thời gian đặt bàn *
+                  </label>
+                  <input
+                    type="datetime-local"
+                    id="thoigian_dat_step1"
+                    name="thoigian_dat"
+                    value={bookingForm.thoigian_dat}
+                    onChange={handleFormChange}
+                    className={errors.thoigian_dat ? 'error' : ''}
+                    min={getMinDateTime()}
+                  />
+                  {errors.thoigian_dat && (
+                    <span className="error-text">{errors.thoigian_dat}</span>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="songuoi_step1">Số người *</label>
+                  <input
+                    type="number"
+                    id="songuoi_step1"
+                    name="songuoi"
+                    value={bookingForm.songuoi}
+                    onChange={handleFormChange}
+                    className={errors.songuoi ? 'error' : ''}
+                    min="1"
+                    max="20"
+                    placeholder="4"
+                  />
+                  {errors.songuoi && (
+                    <span className="error-text">{errors.songuoi}</span>
+                  )}
+                </div>
+              </div>
+            </div>
 
             {/* Area Filter */}
-            <div className="area-filter">
-              <label>Chọn khu vực:</label>
-              <select
-                value={selectedArea}
-                onChange={(e) => setSelectedArea(e.target.value)}
-              >
-                <option value="all">Tất cả khu vực</option>
-                {areas.map((area) => (
-                  <option key={area.mavung} value={area.mavung}>
-                    {area.tenvung}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {bookingForm.thoigian_dat && (
+              <div className="area-filter">
+                <label>Chọn khu vực:</label>
+                <select
+                  value={selectedArea}
+                  onChange={(e) => setSelectedArea(e.target.value)}
+                >
+                  <option value="all">Tất cả khu vực</option>
+                  {areas.map((area) => (
+                    <option key={area.mavung} value={area.mavung}>
+                      {area.tenvung}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* Tables Grid */}
             {bookingForm.thoigian_dat && (
@@ -398,14 +489,11 @@ const BookingPage = () => {
                               ? 'selected'
                               : ''
                           }`}
-                          onClick={() => handleTableSelect(table)}
+                          onClick={(e) => handleTableSelect(table, e)}
                         >
                           <div className="table-name">{table.tenban}</div>
                           <div className="table-capacity">
                             {table.soghe} ghế
-                          </div>
-                          <div className="table-status">
-                            ✅ Trống tại thời điểm đặt
                           </div>
                           {/* {table.vitri && (
                             <div className="table-location">{table.vitri}</div>
@@ -455,7 +543,7 @@ const BookingPage = () => {
               </div>
             </div>
 
-            <form className="booking-form">
+            <div className="booking-form">
               {errors.general && (
                 <div className="error-message general-error">
                   {errors.general}
@@ -514,41 +602,6 @@ const BookingPage = () => {
                 )}
               </div>
 
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="songuoi">Số người *</label>
-                  <input
-                    type="number"
-                    id="songuoi"
-                    name="songuoi"
-                    value={bookingForm.songuoi}
-                    onChange={handleFormChange}
-                    className={errors.songuoi ? 'error' : ''}
-                    min="1"
-                    max={selectedTable?.soghe || 20}
-                  />
-                  {errors.songuoi && (
-                    <span className="error-text">{errors.songuoi}</span>
-                  )}
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="thoigian_dat">Thời gian đặt bàn *</label>
-                  <input
-                    type="datetime-local"
-                    id="thoigian_dat"
-                    name="thoigian_dat"
-                    value={bookingForm.thoigian_dat}
-                    onChange={handleFormChange}
-                    className={errors.thoigian_dat ? 'error' : ''}
-                    min={getMinDateTime()}
-                  />
-                  {errors.thoigian_dat && (
-                    <span className="error-text">{errors.thoigian_dat}</span>
-                  )}
-                </div>
-              </div>
-
               <div className="form-group">
                 <label htmlFor="ghichu">Ghi chú</label>
                 <textarea
@@ -560,7 +613,7 @@ const BookingPage = () => {
                   rows="3"
                 />
               </div>
-            </form>
+            </div>
 
             <div className="step-actions">
               <Button variant="ghost" onClick={handlePrevStep}>

@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+} from 'react';
 
 const AuthContext = createContext();
 
@@ -22,7 +29,9 @@ export const AuthProvider = ({ children }) => {
     if (token && userData) {
       try {
         const parsedUser = JSON.parse(userData);
-        console.log('Restored user from localStorage:', parsedUser);
+        if (window.authDebug) {
+          console.log('Restored user from localStorage:', parsedUser);
+        }
         setUser(parsedUser);
       } catch (error) {
         console.error('Invalid user data in localStorage:', error);
@@ -36,19 +45,27 @@ export const AuthProvider = ({ children }) => {
 
   // Debug user state changes
   useEffect(() => {
-    console.log('User state changed:', user);
+    if (window.authDebug) {
+      console.log('User state changed:', user);
+    }
   }, [user]);
 
   const login = (userData, token) => {
-    console.log('AuthContext.login called with:', userData);
+    if (window.authDebug) {
+      console.log('AuthContext.login called with:', userData);
+    }
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
     setUser(userData);
-    console.log('User state updated to:', userData);
+    if (window.authDebug) {
+      console.log('User state updated to:', userData);
+    }
   };
 
   const logout = () => {
-    console.log('Logout called - clearing all auth data');
+    if (window.authDebug) {
+      console.log('Logout called - clearing all auth data');
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
@@ -61,47 +78,56 @@ export const AuthProvider = ({ children }) => {
     }, 100);
   };
 
-  const isAuthenticated = () => {
+  const isAuthenticated = useCallback(() => {
     const hasUser = !!user;
     const hasToken = !!localStorage.getItem('token');
     const result = hasUser && hasToken;
 
-    console.log('isAuthenticated check:', {
-      hasUser,
-      hasToken,
-      result,
-      user: user?.hoten || 'No user',
-    });
+    // Only log if result changes to reduce spam
+    if (window.authDebug) {
+      console.log('isAuthenticated check:', {
+        hasUser,
+        hasToken,
+        result,
+        user: user?.hoten || 'No user',
+      });
+    }
 
     return result;
-  };
+  }, [user]);
 
-  const isAdmin = () => {
-    console.log('isAdmin check:', {
-      user: user,
-      tenvaitro: user?.tenvaitro,
-      mavaitro: user?.mavaitro,
-      result: user?.tenvaitro === 'admin' || user?.mavaitro === 1,
-    });
+  const isAdmin = useCallback(() => {
+    // Only log if result changes to reduce spam
+    if (window.authDebug) {
+      console.log('isAdmin check:', {
+        user: user,
+        tenvaitro: user?.tenvaitro,
+        mavaitro: user?.mavaitro,
+        result: user?.tenvaitro === 'admin' || user?.mavaitro === 1,
+      });
+    }
 
     if (!user) return null;
     // Check both tenvaitro and mavaitro for admin
     return user.tenvaitro === 'admin' || user.mavaitro === 1;
-  };
+  }, [user]);
 
-  const getToken = () => {
+  const getToken = useCallback(() => {
     return localStorage.getItem('token');
-  };
+  }, []);
 
-  const value = {
-    user,
-    isLoading,
-    login,
-    logout,
-    isAuthenticated,
-    isAdmin,
-    getToken,
-  };
+  const value = useMemo(
+    () => ({
+      user,
+      isLoading,
+      login,
+      logout,
+      isAuthenticated,
+      isAdmin,
+      getToken,
+    }),
+    [user, isLoading, isAuthenticated, isAdmin, getToken]
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

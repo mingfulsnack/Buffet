@@ -18,6 +18,9 @@ const publicApi = axios.create({
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache, no-store, must-revalidate',
+    Pragma: 'no-cache',
+    Expires: '0',
   },
 });
 
@@ -27,6 +30,23 @@ api.interceptors.request.use(
     const token = localStorage.getItem('token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Request interceptor for public API to prevent caching
+publicApi.interceptors.request.use(
+  (config) => {
+    // Add timestamp to prevent caching
+    const timestamp = Date.now();
+    if (config.params) {
+      config.params._t = timestamp;
+    } else {
+      config.params = { _t: timestamp };
     }
     return config;
   },
@@ -46,6 +66,22 @@ api.interceptors.response.use(
       console.log('401 Unauthorized - token may be expired');
     }
     // For other errors (like 429 rate limit), just reject without redirect
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor for public API
+publicApi.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    // Handle 304 specifically for public API
+    if (error.response?.status === 304) {
+      console.warn('304 Not Modified received, forcing fresh request');
+      // Return empty data to trigger re-fetch
+      return Promise.reject(new Error('Cache hit, need fresh data'));
+    }
     return Promise.reject(error);
   }
 );

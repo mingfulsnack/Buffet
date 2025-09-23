@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo, useMemo } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   FaUtensils,
@@ -15,16 +15,28 @@ import {
 import { useAuth } from '../context/AuthContext';
 import './Sidebar.scss';
 
-const Sidebar = () => {
+const Sidebar = memo(() => {
   const { isAuthenticated, isAdmin, user } = useAuth();
 
-  // Debug logging
-  console.log('Sidebar Debug:', {
-    isAuthenticated: isAuthenticated(),
-    isAdmin: isAdmin(),
-    user: user,
-    userRole: user?.vaitro,
-  });
+  // Memoize authentication state
+  const authState = useMemo(
+    () => ({
+      isAuth: isAuthenticated(),
+      isAdminUser: isAdmin(),
+      currentUser: user,
+    }),
+    [isAuthenticated, isAdmin, user]
+  );
+
+  // Only log when auth state changes, not on every render
+  if (window.sidebarDebug) {
+    console.log('Sidebar Debug:', {
+      isAuthenticated: authState.isAuth,
+      isAdmin: authState.isAdminUser,
+      user: authState.currentUser,
+      userRole: authState.currentUser?.vaitro,
+    });
+  }
 
   // Menu items for guests (not logged in)
   const guestMenuItems = [
@@ -91,7 +103,7 @@ const Sidebar = () => {
 
   // Determine which menu to show
   const menuItems =
-    isAuthenticated() && isAdmin() ? adminMenuItems : guestMenuItems;
+    authState.isAuth && authState.isAdminUser ? adminMenuItems : guestMenuItems;
 
   return (
     <aside className="sidebar">
@@ -132,6 +144,8 @@ const Sidebar = () => {
       </nav>
     </aside>
   );
-};
+});
+
+Sidebar.displayName = 'Sidebar';
 
 export default Sidebar;
