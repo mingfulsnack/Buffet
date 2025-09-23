@@ -103,6 +103,10 @@ export const employeeAPI = {
 // Table API
 export const tableAPI = {
   getTables: (params) => api.get('/tables', { params }),
+  getAvailableTablesAtTime: (params) =>
+    api.get('/tables/available', { params }),
+  getTableStatusAtTime: (id, params) =>
+    api.get(`/tables/${id}/status`, { params }),
   createTable: (data) => api.post('/tables', data),
   updateTable: (id, data) => api.put(`/tables/${id}`, data),
   deleteTable: (id) => api.delete(`/tables/${id}`),
@@ -112,6 +116,8 @@ export const tableAPI = {
 
   // Public table API (no auth required)
   getPublicTables: (params) => publicApi.get('/public/tables', { params }),
+  getPublicAvailableTablesAtTime: (params) =>
+    publicApi.get('/public/tables/available', { params }),
   getPublicAreas: () => publicApi.get('/public/areas'),
 };
 

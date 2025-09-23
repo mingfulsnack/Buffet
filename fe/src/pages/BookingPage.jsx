@@ -6,6 +6,7 @@ import Modal from '../components/Modal';
 import {
   showLoadingToast,
   showValidationError,
+  showError,
 } from '../utils/toast';
 import './BookingPage.scss';
 
@@ -83,32 +84,66 @@ const BookingPage = () => {
     loadInitialData();
   }, []); // Empty dependency array to run only once
 
-  // Load tables when areas are loaded or area selection changes
+  // Load tables when areas, time, or guest count changes
   useEffect(() => {
     const loadTables = async () => {
-      // Don't load if no areas or currently loading
-      if (areas.length === 0 || isLoadingTables.current) return;
+      // Don't load if no areas or no booking time set
+      if (
+        areas.length === 0 ||
+        !bookingForm.thoigian_dat ||
+        isLoadingTables.current
+      )
+        return;
 
       isLoadingTables.current = true;
+      setLoading(true);
       try {
+        // Use new API to get available tables at specific time
         const params = {
-          trangthai: 'Trong', // Chỉ lấy bàn trống
-          ...(selectedArea !== 'all' && { mavung: selectedArea }),
+          thoigian_dat: bookingForm.thoigian_dat,
+          songuoi: bookingForm.songuoi || undefined,
         };
 
-        const response = await tableAPI.getPublicTables(params);
+        const response = await tableAPI.getPublicAvailableTablesAtTime(params);
         if (response.data.success) {
           setTables(response.data.data);
+
+          // Clear selected table if it's not available anymore
+          if (
+            selectedTable &&
+            !response.data.data.some((area) =>
+              area.tables.some((table) => table.maban === selectedTable.maban)
+            )
+          ) {
+            setSelectedTable(null);
+            setBookingForm((prev) => ({ ...prev, maban: null }));
+          }
         }
       } catch (error) {
-        console.error('Error loading tables:', error);
+        console.error('Error loading available tables:', error);
+        showError('Không thể tải danh sách bàn trống');
+        setTables([]);
       } finally {
         isLoadingTables.current = false;
+        setLoading(false);
       }
     };
 
-    loadTables();
-  }, [areas.length, selectedArea]); // Depend on areas and selected area
+    // Only load tables if we have booking time
+    if (bookingForm.thoigian_dat) {
+      loadTables();
+    } else {
+      // Clear tables if no time selected
+      setTables([]);
+      setSelectedTable(null);
+      setBookingForm((prev) => ({ ...prev, maban: null }));
+    }
+  }, [
+    areas.length,
+    bookingForm.thoigian_dat,
+    bookingForm.songuoi,
+    selectedTable,
+  ]); // Depend on time and guest count
 
   const handleTableSelect = (table) => {
     setSelectedTable(table);
@@ -326,10 +361,29 @@ const BookingPage = () => {
             </div>
 
             {/* Tables Grid */}
+            {bookingForm.thoigian_dat && (
+              <div className="booking-time-notice">
+                <i className="icon-clock"></i>
+                <span>
+                  Hiển thị các bàn trống lúc{' '}
+                  {new Date(bookingForm.thoigian_dat).toLocaleString('vi-VN')}
+                </span>
+              </div>
+            )}
+
             <div className="tables-grid">
-              {tables.length === 0 ? (
+              {!bookingForm.thoigian_dat ? (
+                <div className="no-time-selected">
+                  <p>
+                    📅 Vui lòng chọn thời gian đặt bàn để xem danh sách bàn
+                    trống
+                  </p>
+                </div>
+              ) : tables.length === 0 ? (
                 <p className="no-tables">
-                  Không có bàn trống trong khu vực này
+                  {loading
+                    ? '🔄 Đang tải danh sách bàn...'
+                    : '❌ Không có bàn trống tại thời điểm này'}
                 </p>
               ) : (
                 tables.map((area) => (
@@ -349,6 +403,9 @@ const BookingPage = () => {
                           <div className="table-name">{table.tenban}</div>
                           <div className="table-capacity">
                             {table.soghe} ghế
+                          </div>
+                          <div className="table-status">
+                            ✅ Trống tại thời điểm đặt
                           </div>
                           {/* {table.vitri && (
                             <div className="table-location">{table.vitri}</div>

@@ -1,10 +1,10 @@
 const { Table } = require('../models');
 const { formatResponse, formatErrorResponse } = require('../utils/helpers');
 
-// Lấy danh sách bàn với sơ đồ
+// Lấy danh sách bàn với sơ đồ (trạng thái theo thời gian thực)
 const getTables = async (req, res) => {
   try {
-    const { mavung, trangthai } = req.query;
+    const { mavung, trangthai, checkTime } = req.query;
 
     const conditions = {};
     if (mavung) conditions.mavung = mavung;
@@ -17,6 +17,73 @@ const getTables = async (req, res) => {
     );
   } catch (error) {
     console.error('Get tables error:', error);
+    res.status(500).json(formatErrorResponse('Lỗi server'));
+  }
+};
+
+// Lấy danh sách bàn có thể đặt tại thời điểm cụ thể
+const getAvailableTablesAtTime = async (req, res) => {
+  try {
+    const { thoigian_dat, songuoi } = req.query;
+
+    if (!thoigian_dat) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Thiếu thời gian đặt bàn'));
+    }
+
+    // Validate thời gian đặt
+    const bookingTime = new Date(thoigian_dat);
+    const now = new Date();
+
+    if (bookingTime <= now) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Thời gian đặt bàn phải trong tương lai'));
+    }
+
+    const tablesByArea = await Table.findAvailableTablesAtTime(
+      bookingTime,
+      songuoi ? parseInt(songuoi) : null
+    );
+
+    res.json(
+      formatResponse(
+        true,
+        tablesByArea,
+        `Lấy danh sách bàn trống lúc ${bookingTime.toLocaleString(
+          'vi-VN'
+        )} thành công`
+      )
+    );
+  } catch (error) {
+    console.error('Get available tables error:', error);
+    res.status(500).json(formatErrorResponse('Lỗi server'));
+  }
+};
+
+// Kiểm tra trạng thái bàn tại thời điểm cụ thể
+const getTableStatusAtTime = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { checkTime } = req.query;
+
+    const timeToCheck = checkTime ? new Date(checkTime) : new Date();
+    const tableStatus = await Table.getTableStatusAtTime(id, timeToCheck);
+
+    if (!tableStatus) {
+      return res.status(404).json(formatErrorResponse('Không tìm thấy bàn'));
+    }
+
+    res.json(
+      formatResponse(
+        true,
+        tableStatus,
+        `Trạng thái bàn tại ${timeToCheck.toLocaleString('vi-VN')}`
+      )
+    );
+  } catch (error) {
+    console.error('Get table status error:', error);
     res.status(500).json(formatErrorResponse('Lỗi server'));
   }
 };
@@ -199,6 +266,8 @@ const createArea = async (req, res) => {
 
 module.exports = {
   getTables,
+  getAvailableTablesAtTime,
+  getTableStatusAtTime,
   getTableDetail,
   createTable,
   updateTable,

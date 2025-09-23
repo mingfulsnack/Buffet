@@ -5,7 +5,7 @@ class Table extends BaseModel {
     super('ban');
   }
 
-  // Lấy danh sách bàn với vùng
+  // Lấy danh sách bàn với vùng và trạng thái theo thời gian thực
   async findAllWithArea(conditions = {}) {
     let whereClause = 'WHERE 1=1';
     const params = [];
@@ -17,15 +17,56 @@ class Table extends BaseModel {
       params.push(conditions.mavung);
     }
 
-    if (conditions.trangthai) {
-      paramCount++;
-      whereClause += ` AND b.trangthai = $${paramCount}`;
-      params.push(conditions.trangthai);
-    }
+    // Lấy thời gian hiện tại để tính trạng thái động
+    const currentTime = new Date();
 
     const result = await this.query(
       `
-      SELECT b.*, v.tenvung, v.mota as vung_mota
+      SELECT 
+        b.*,
+        v.tenvung, 
+        v.mota as vung_mota,
+        -- Tính trạng thái động dựa trên thời gian
+        CASE 
+          -- Nếu bàn đang được sử dụng (có booking đang diễn ra)
+          WHEN EXISTS (
+            SELECT 1 FROM phieudatban p 
+            WHERE p.maban = b.maban 
+              AND p.trangthai = 'DangSuDung'
+          ) THEN 'DangSuDung'
+          
+          -- Nếu có đặt bàn trong khoảng thời gian sắp tới (30 phút trước đến 2 giờ sau)
+          WHEN EXISTS (
+            SELECT 1 FROM phieudatban p 
+            WHERE p.maban = b.maban 
+              AND p.trangthai IN ('DaXacNhan', 'DaDat')
+              AND p.thoigian_dat BETWEEN NOW() - INTERVAL '30 minutes' AND NOW() + INTERVAL '2 hours'
+          ) THEN 'DaDat'
+          
+          -- Nếu bàn bị khóa hoặc bảo trì
+          WHEN b.trangthai IN ('Lock', 'BaoTri') THEN b.trangthai
+          
+          -- Mặc định là trống
+          ELSE 'Trong'
+        END as trangthai_thuc_te,
+        
+        -- Lấy thông tin đặt bàn gần nhất (nếu có)
+        (
+          SELECT json_build_object(
+            'maphieu', p.maphieu,
+            'guest_hoten', p.guest_hoten,
+            'thoigian_dat', p.thoigian_dat,
+            'songuoi', p.songuoi,
+            'trangthai', p.trangthai
+          )
+          FROM phieudatban p 
+          WHERE p.maban = b.maban 
+            AND p.trangthai IN ('DaXacNhan', 'DaDat', 'DangSuDung')
+            AND p.thoigian_dat >= NOW() - INTERVAL '4 hours'
+          ORDER BY p.thoigian_dat ASC
+          LIMIT 1
+        ) as dat_ban_hien_tai
+        
       FROM ${this.tableName} b
       JOIN vung v ON b.mavung = v.mavung
       ${whereClause}
@@ -47,8 +88,22 @@ class Table extends BaseModel {
         };
       }
 
-      // Loại bỏ thông tin vùng khỏi bàn
-      const { tenvung, vung_mota, ...tableInfo } = table;
+      // Sử dụng trạng thái động thay vì trạng thái tĩnh
+      const {
+        tenvung,
+        vung_mota,
+        trangthai_thuc_te,
+        dat_ban_hien_tai,
+        ...tableInfo
+      } = table;
+      tableInfo.trangthai = trangthai_thuc_te; // Ghi đè trạng thái bằng trạng thái động
+      tableInfo.booking_info = dat_ban_hien_tai; // Thêm thông tin đặt bàn
+
+      // Lọc theo trạng thái nếu có điều kiện
+      if (conditions.trangthai && conditions.trangthai !== trangthai_thuc_te) {
+        return; // Bỏ qua bàn này nếu không khớp điều kiện lọc
+      }
+
       tablesByArea[areaName].tables.push(tableInfo);
     });
 
@@ -158,7 +213,7 @@ class Table extends BaseModel {
     });
   }
 
-  // Kiểm tra bàn có thể đặt không
+  // Kiểm tra bàn có thể đặt không tại thời điểm cụ thể
   async isAvailable(maban, thoigian_dat) {
     const result = await this.query(
       `
@@ -172,6 +227,139 @@ class Table extends BaseModel {
     );
 
     return result.rows.length === 0;
+  }
+
+  // Lấy trạng thái bàn tại thời điểm cụ thể
+  async getTableStatusAtTime(maban, checkTime = null) {
+    if (!checkTime) {
+      checkTime = new Date();
+    }
+
+    const result = await this.query(
+      `
+      SELECT 
+        b.maban,
+        b.tenban,
+        b.trangthai as trang_thai_co_ban,
+        CASE 
+          -- Nếu bàn đang được sử dụng tại thời điểm check
+          WHEN EXISTS (
+            SELECT 1 FROM phieudatban p 
+            WHERE p.maban = b.maban 
+              AND p.trangthai = 'DangSuDung'
+              AND p.thoigian_dat <= $2
+              AND (p.thoigian_dat + INTERVAL '2 hours') > $2
+          ) THEN 'DangSuDung'
+          
+          -- Nếu có đặt bàn trong khoảng thời gian check (30 phút trước đến 2 giờ sau)
+          WHEN EXISTS (
+            SELECT 1 FROM phieudatban p 
+            WHERE p.maban = b.maban 
+              AND p.trangthai IN ('DaXacNhan', 'DaDat')
+              AND p.thoigian_dat <= $2 + INTERVAL '30 minutes'
+              AND (p.thoigian_dat + INTERVAL '2 hours') > $2
+          ) THEN 'DaDat'
+          
+          -- Nếu bàn bị khóa hoặc bảo trì
+          WHEN b.trangthai IN ('Lock', 'BaoTri') THEN b.trangthai
+          
+          -- Mặc định là trống
+          ELSE 'Trong'
+        END as trang_thai_tai_thoi_diem,
+        
+        -- Lấy thông tin đặt bàn (nếu có)
+        (
+          SELECT json_build_object(
+            'maphieu', p.maphieu,
+            'guest_hoten', p.guest_hoten,
+            'thoigian_dat', p.thoigian_dat,
+            'songuoi', p.songuoi,
+            'trangthai', p.trangthai,
+            'thoi_gian_con_lai', EXTRACT(EPOCH FROM (p.thoigian_dat - $2))/60
+          )
+          FROM phieudatban p 
+          WHERE p.maban = b.maban 
+            AND p.trangthai IN ('DaXacNhan', 'DaDat', 'DangSuDung')
+            AND p.thoigian_dat <= $2 + INTERVAL '4 hours'
+            AND (p.thoigian_dat + INTERVAL '2 hours') > $2
+          ORDER BY p.thoigian_dat ASC
+          LIMIT 1
+        ) as thong_tin_dat_ban
+        
+      FROM ${this.tableName} b
+      WHERE b.maban = $1
+    `,
+      [maban, checkTime]
+    );
+
+    return result.rows[0] || null;
+  }
+
+  // Lấy danh sách bàn với trạng thái tại thời điểm cụ thể (cho booking form)
+  async findAvailableTablesAtTime(thoigian_dat, songuoi = null) {
+    const params = [thoigian_dat];
+    let sogheFilter = '';
+
+    if (songuoi) {
+      params.push(songuoi);
+      sogheFilter = `AND b.soghe >= $${params.length}`;
+    }
+
+    const result = await this.query(
+      `
+      SELECT 
+        b.*,
+        v.tenvung,
+        v.mota as vung_mota,
+        CASE 
+          -- Kiểm tra xung đột thời gian đặt bàn
+          WHEN EXISTS (
+            SELECT 1 FROM phieudatban p 
+            WHERE p.maban = b.maban 
+              AND p.trangthai IN ('DaXacNhan', 'DaDat', 'DangSuDung')
+              -- Kiểm tra overlap: đặt bàn mới có giao với đặt bàn hiện tại không
+              AND NOT (
+                $1 + INTERVAL '2 hours' <= p.thoigian_dat OR 
+                $1 >= p.thoigian_dat + INTERVAL '2 hours'
+              )
+          ) THEN false
+          
+          -- Nếu bàn bị khóa hoặc bảo trì
+          WHEN b.trangthai IN ('Lock', 'BaoTri') THEN false
+          
+          -- Bàn có thể đặt
+          ELSE true
+        END as co_the_dat
+        
+      FROM ${this.tableName} b
+      JOIN vung v ON b.mavung = v.mavung
+      WHERE 1=1 ${sogheFilter}
+      ORDER BY v.tenvung, b.tenban
+    `,
+      params
+    );
+
+    // Nhóm theo vùng và chỉ lấy bàn có thể đặt
+    const tablesByArea = {};
+    result.rows.forEach((table) => {
+      if (!table.co_the_dat) return; // Bỏ qua bàn không thể đặt
+
+      const areaName = table.tenvung;
+      if (!tablesByArea[areaName]) {
+        tablesByArea[areaName] = {
+          mavung: table.mavung,
+          tenvung: table.tenvung,
+          mota: table.vung_mota,
+          tables: [],
+        };
+      }
+
+      const { tenvung, vung_mota, co_the_dat, ...tableInfo } = table;
+      tableInfo.trangthai = 'Trong'; // Tất cả bàn trong list này đều trống tại thời điểm đặt
+      tablesByArea[areaName].tables.push(tableInfo);
+    });
+
+    return Object.values(tablesByArea);
   }
 
   // Kiểm tra tên bàn trùng trong vùng

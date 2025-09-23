@@ -13,11 +13,18 @@ router.get('/menu', menuController.getPublicMenu);
 // Lấy danh sách bàn trống
 router.get('/tables', tableController.getTables);
 
+// Lấy bàn trống tại thời điểm cụ thể (cho booking)
+router.get('/tables/available', tableController.getAvailableTablesAtTime);
+
 // Lấy danh sách vùng/khu vực
 router.get('/areas', tableController.getAreas);
 
 // Tạo đặt bàn mới (khách hàng)
-router.post('/bookings', validate(schemas.booking), bookingController.createBooking);
+router.post(
+  '/bookings',
+  validate(schemas.booking),
+  bookingController.createBooking
+);
 
 // Lấy thông tin đặt bàn bằng token (khách hàng)
 router.get('/bookings/:token', bookingController.getBookingByToken);
