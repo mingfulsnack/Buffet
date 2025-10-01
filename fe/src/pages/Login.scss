@@ -81,13 +81,17 @@
         position: relative;
         z-index: 20;
 
-        .login-title {
+        .login-header {
           text-align: center;
-          font-size: $font-3xl;
-          font-weight: $font-bold;
-          color: $text-primary;
           margin-bottom: $spacing-2xl;
-          letter-spacing: 2px;
+
+          .login-title {
+            font-size: $font-3xl;
+            font-weight: $font-bold;
+            color: $text-primary;
+            letter-spacing: 2px;
+            margin: 0;
+          }
         }
 
         .error-message {
@@ -153,6 +157,40 @@
             &:disabled {
               background-color: $text-light;
               cursor: not-allowed;
+            }
+          }
+
+          .home-btn {
+            width: 100%;
+            background-color: transparent;
+            color: $primary-color;
+            border: 2px solid $primary-color;
+            padding: $spacing-md $spacing-lg;
+            border-radius: $border-radius-md;
+            font-size: $font-md;
+            font-weight: $font-medium;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: $spacing-md;
+
+            &:hover {
+              background-color: $primary-color;
+              color: white;
+              transform: translateY(-1px);
+              box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            &:active {
+              transform: translateY(0);
+            }
+
+            .home-icon {
+              font-size: 1rem;
             }
           }
         }

@@ -46,9 +46,11 @@
       gap: 1rem;
 
       .btn {
-        min-width: auto;
+        min-width: 160px;
         padding: 0.75rem 1rem;
         font-size: 0.9rem;
+        text-align: center;
+        white-space: nowrap;
       }
     }
 
@@ -174,12 +176,21 @@
           &.dish-image-cell {
             width: 80px;
             padding: 0.5rem;
+            text-align: center;
 
             .dish-image {
               width: 60px;
               height: 60px;
               object-fit: cover;
               border-radius: 8px;
+              transition: all 0.3s ease;
+              display: block;
+              margin: 0 auto;
+              
+              &:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+              }
             }
 
             .no-image {
@@ -193,6 +204,13 @@
               font-size: 0.75rem;
               color: #6b7280;
               text-align: center;
+              transition: all 0.3s ease;
+              margin: 0 auto;
+              
+              &:hover {
+                background-color: #e5e7eb;
+                transform: scale(1.05);
+              }
             }
           }
 
@@ -328,12 +346,21 @@
           &.set-image-cell {
             width: 80px;
             padding: 0.5rem;
+            text-align: center;
 
             .set-image {
               width: 60px;
               height: 60px;
               object-fit: cover;
               border-radius: 8px;
+              transition: all 0.3s ease;
+              display: block;
+              margin: 0 auto;
+              
+              &:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+              }
             }
 
             .no-image {
@@ -347,6 +374,13 @@
               font-size: 0.75rem;
               color: #6b7280;
               text-align: center;
+              transition: all 0.3s ease;
+              margin: 0 auto;
+              
+              &:hover {
+                background-color: #e5e7eb;
+                transform: scale(1.05);
+              }
             }
           }
 

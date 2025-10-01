@@ -7,6 +7,7 @@ import DishForm from '../../components/menu/DishForm';
 import CategoryForm from '../../components/menu/CategoryForm';
 import CategoryFormContent from '../../components/menu/CategoryFormContent';
 import BuffetSetForm from '../../components/menu/BuffetSetForm';
+import MenuItemDetailModal from '../../components/menu/MenuItemDetailModal';
 import {
   showSuccess,
   showLoadingToast,
@@ -30,6 +31,11 @@ const AdminMenuPage = () => {
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(''); // 'dish', 'category', 'buffet', 'buffet-category'
   const [editingItem, setEditingItem] = useState(null);
+
+  // Detail modal states
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailItem, setDetailItem] = useState(null);
+  const [detailType, setDetailType] = useState(''); // 'dish' or 'buffet'
 
   // Prevent multiple API calls
   const hasLoadedData = useRef(false);
@@ -217,6 +223,19 @@ const AdminMenuPage = () => {
     setEditingItem(null);
   };
 
+  // Detail modal handlers
+  const handleViewDetail = (type, item) => {
+    setDetailType(type);
+    setDetailItem(item);
+    setShowDetailModal(true);
+  };
+
+  const handleDetailModalClose = () => {
+    setShowDetailModal(false);
+    setDetailItem(null);
+    setDetailType('');
+  };
+
   const handleSaveSuccess = async (savedItem) => {
     const typeNames = {
       dish: editingItem
@@ -374,12 +393,26 @@ const AdminMenuPage = () => {
                           src={dish.image}
                           alt={dish.tenmon}
                           className="dish-image"
+                          onClick={() => handleViewDetail('dish', dish)}
+                          style={{ cursor: 'pointer' }}
                         />
                       ) : (
-                        <div className="no-image">Không có ảnh</div>
+                        <div 
+                          className="no-image"
+                          onClick={() => handleViewDetail('dish', dish)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          Không có ảnh
+                        </div>
                       )}
                     </td>
-                    <td className="dish-name">{dish.tenmon}</td>
+                    <td 
+                      className="dish-name"
+                      onClick={() => handleViewDetail('dish', dish)}
+                      style={{ cursor: 'pointer', color: '#3498db' }}
+                    >
+                      {dish.tenmon}
+                    </td>
                     <td className="dish-note">{dish.ghichu || '-'}</td>
                     <td className="dish-price">{formatPrice(dish.dongia)}</td>
                     <td className="dish-category">{dish.tendanhmuc}</td>
@@ -455,12 +488,26 @@ const AdminMenuPage = () => {
                           src={set.image}
                           alt={set.tenset}
                           className="set-image"
+                          onClick={() => handleViewDetail('buffet', set)}
+                          style={{ cursor: 'pointer' }}
                         />
                       ) : (
-                        <div className="no-image">Không có ảnh</div>
+                        <div 
+                          className="no-image"
+                          onClick={() => handleViewDetail('buffet', set)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          Không có ảnh
+                        </div>
                       )}
                     </td>
-                    <td className="set-name">{set.tenset}</td>
+                    <td 
+                      className="set-name"
+                      onClick={() => handleViewDetail('buffet', set)}
+                      style={{ cursor: 'pointer', color: '#3498db' }}
+                    >
+                      {set.tenset}
+                    </td>
                     <td className="set-category">{set.tendanhmuc || '-'}</td>
                     <td className="set-price">{formatPrice(set.dongia)}</td>
                     <td className="set-time">
@@ -558,6 +605,14 @@ const AdminMenuPage = () => {
           />
         )}
       </Modal>
+
+      {/* Detail Modal */}
+      <MenuItemDetailModal
+        isOpen={showDetailModal}
+        onClose={handleDetailModalClose}
+        item={detailItem}
+        type={detailType}
+      />
     </div>
   );
 };

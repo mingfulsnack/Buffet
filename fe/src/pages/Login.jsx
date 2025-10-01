@@ -90,7 +90,9 @@ const Login = () => {
         {/* Right panel with login form */}
         <div className="login-form-panel">
           <div className="login-form-container">
-            <h1 className="login-title">LOGIN</h1>
+            <div className="login-header">
+              <h1 className="login-title">LOGIN</h1>
+            </div>
 
             {error && <div className="error-message">{error}</div>}
 
@@ -125,6 +127,14 @@ const Login = () => {
                 disabled={isLoading}
               >
                 {isLoading ? 'Đang đăng nhập...' : 'Đăng nhập'}
+              </button>
+                            <button
+                type="button"
+                className="btn btn-secondary home-btn"
+                onClick={() => navigate('/')}
+              >
+                <span className="home-icon">🏠</span>
+                Về trang chủ
               </button>
             </form>
           </div>

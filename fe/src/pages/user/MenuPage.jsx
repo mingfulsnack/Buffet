@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { menuAPI } from '../../services/api';
 import LoadingSpinner from '../../components/LoadingSpinner';
+import MenuItemDetailModal from '../../components/menu/MenuItemDetailModal';
 import './MenuPage.scss';
 
 const MenuPage = () => {
@@ -14,6 +15,11 @@ const MenuPage = () => {
   const [buffetSearchTerm, setBuffetSearchTerm] = useState('');
   const [selectedBuffetCategory, setSelectedBuffetCategory] = useState('');
   const [buffetCategories, setBuffetCategories] = useState([]);
+
+  // Detail modal states
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [detailItem, setDetailItem] = useState(null);
+  const [detailType, setDetailType] = useState(''); // 'dish' or 'buffet'
 
   // Prevent multiple API calls
   const hasLoadedData = useRef(false);
@@ -125,6 +131,19 @@ const MenuPage = () => {
     return matchesSearch && matchesCategory;
   });
 
+  // Detail modal handlers
+  const handleViewDetail = (type, item) => {
+    setDetailType(type);
+    setDetailItem(item);
+    setShowDetailModal(true);
+  };
+
+  const handleDetailModalClose = () => {
+    setShowDetailModal(false);
+    setDetailItem(null);
+    setDetailType('');
+  };
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -206,12 +225,26 @@ const MenuPage = () => {
                           src={dish.image}
                           alt={dish.tenmon}
                           className="dish-image"
+                          onClick={() => handleViewDetail('dish', dish)}
+                          style={{ cursor: 'pointer' }}
                         />
                       ) : (
-                        <div className="no-image">Không có ảnh</div>
+                        <div 
+                          className="no-image"
+                          onClick={() => handleViewDetail('dish', dish)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          Không có ảnh
+                        </div>
                       )}
                     </td>
-                    <td className="dish-name">{dish.tenmon}</td>
+                    <td 
+                      className="dish-name"
+                      onClick={() => handleViewDetail('dish', dish)}
+                      style={{ cursor: 'pointer', color: '#3498db', fontWeight: '500' }}
+                    >
+                      {dish.tenmon}
+                    </td>
                     <td className="dish-note">{dish.ghichu || '-'}</td>
                     <td className="dish-price">{formatPrice(dish.dongia)}</td>
                     <td className="dish-category">
@@ -280,12 +313,26 @@ const MenuPage = () => {
                           src={set.image}
                           alt={set.tenset}
                           className="set-image"
+                          onClick={() => handleViewDetail('buffet', set)}
+                          style={{ cursor: 'pointer' }}
                         />
                       ) : (
-                        <div className="no-image">Không có ảnh</div>
+                        <div 
+                          className="no-image"
+                          onClick={() => handleViewDetail('buffet', set)}
+                          style={{ cursor: 'pointer' }}
+                        >
+                          Không có ảnh
+                        </div>
                       )}
                     </td>
-                    <td className="set-name">{set.tenset}</td>
+                    <td 
+                      className="set-name"
+                      onClick={() => handleViewDetail('buffet', set)}
+                      style={{ cursor: 'pointer', color: '#3498db', fontWeight: '500' }}
+                    >
+                      {set.tenset}
+                    </td>
                     <td className="set-category">
                       {set.tendanhmuc ? (
                         <span className="category-badge">{set.tendanhmuc}</span>
@@ -319,6 +366,14 @@ const MenuPage = () => {
           </div>
         </div>
       )}
+
+      {/* Detail Modal */}
+      <MenuItemDetailModal
+        isOpen={showDetailModal}
+        onClose={handleDetailModalClose}
+        item={detailItem}
+        type={detailType}
+      />
     </div>
   );
 };
