@@ -9,6 +9,7 @@ import React, {
 
 const AuthContext = createContext();
 
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
