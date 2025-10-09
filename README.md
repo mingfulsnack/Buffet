@@ -592,16 +592,15 @@ showValidationError(error.response);
 
 ### Chức năng chính Frontend
 
-#### 🏠 Dashboard
+#### 🏠 Report
 
-- Biểu đồ doanh thu theo tháng (Chart.js)
+- Biểu đồ doanh thu theo ngày,tháng, năm (Chart.js)
 - Thống kê tổng quan (đơn hàng, khách hàng, doanh thu)
-- Widget trạng thái bàn real-time
-- Quick actions cho các tác vụ thường dùng
+
 
 #### 🍽️ Quản lý thực đơn
 
-- CRUD món ăn với upload hình ảnh
+- CRUD món ăn 
 - Quản lý danh mục và set buffet
 - Filter theo danh mục, trạng thái
 - Search món ăn theo tên
@@ -613,28 +612,20 @@ showValidationError(error.response);
 - Thêm/bớt món ăn với validation
 - Tính tổng tiền tự động
 - Xác nhận tạo hóa đơn
-- Loading states và toast feedback
+- Loading states và toast 
 
 #### 🧾 Quản lý hóa đơn
 
 - Danh sách hóa đơn với filter
 - Cập nhật trạng thái thanh toán
-- Xuất hóa đơn PDF (future feature)
 - Thống kê theo trạng thái
 
 #### 🪑 Quản lý bàn
 
 - Sơ đồ bàn theo khu vực
 - Cập nhật trạng thái real-time
-- Drag & drop để sắp xếp
 - Color coding theo trạng thái
 
-#### � Quản lý khách hàng & nhân viên
-
-- CRUD với form validation
-- Phân quyền theo vai trò
-- Search và pagination
-- Export danh sách
 
 ### Frontend Architecture
 
