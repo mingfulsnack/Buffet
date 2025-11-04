@@ -12,14 +12,32 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     margin-bottom: 24px;
 
+    /* Layout: title and actions on the first row, filters spanning full width beneath */
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas:
+      'title actions'
+      'filters filters';
+    gap: 16px;
+
     h2 {
-      margin: 0 0 20px 0;
+      grid-area: title;
+      margin: 0;
       color: $primary-color;
       font-size: 28px;
       font-weight: 600;
+      align-self: center;
+    }
+
+    .header-actions {
+      grid-area: actions;
+      justify-self: end;
+      align-self: center;
     }
 
     .report-filters {
+      grid-area: filters;
       display: flex;
       gap: 20px;
       flex-wrap: wrap;

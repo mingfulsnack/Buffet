@@ -513,6 +513,198 @@ class Booking extends BaseModel {
       throw error;
     }
   }
+
+  // Get booking menu items for invoice PDF
+  // NOTE: This method is deprecated and may not work with new schema
+  // Use getInvoiceMenuItems() instead for new invoice system
+  async getBookingMenuItems(bookingId) {
+    try {
+      // Try to get data through new invoice system first
+      // phieudatban -> hoadon -> donhang -> donhang_chitiet
+      const result = await this.query(
+        `
+        SELECT 
+          dhct.soluong,
+          COALESCE(m.tenmon, s.tenset) as tenmon,
+          dhct.dongia as gia
+        FROM phieudatban pdb
+        LEFT JOIN hoadon hd ON pdb.maphieu = hd.maphieu
+        LEFT JOIN donhang_chitiet dhct ON hd.madon = dhct.madon
+        LEFT JOIN monan m ON dhct.mamon = m.mamon
+        LEFT JOIN setbuffet s ON dhct.maset = s.maset
+        WHERE pdb.maphieu = $1
+      `,
+        [bookingId]
+      );
+
+      return result.rows;
+    } catch (error) {
+      console.error('Error getting booking menu items:', error);
+      throw error;
+    }
+  }
+
+  // Get invoice data by mahd (invoice ID)
+  async getInvoiceData(mahd) {
+    try {
+      console.log('=== getInvoiceData DEBUG ===');
+      console.log('Looking for mahd:', mahd, 'type:', typeof mahd);
+
+      // First check if invoice exists
+      const invoiceCheck = await this.query(
+        'SELECT * FROM hoadon WHERE mahd = $1',
+        [mahd]
+      );
+      console.log('Invoice exists:', invoiceCheck.rows);
+
+      // Check donhang table
+      if (invoiceCheck.rows.length > 0) {
+        const madon = invoiceCheck.rows[0].madon;
+        const donhangCheck = await this.query(
+          'SELECT * FROM donhang WHERE madon = $1',
+          [madon]
+        );
+        console.log('Donhang exists for madon', madon, ':', donhangCheck.rows);
+      }
+
+      const result = await this.query(
+        `
+        SELECT 
+          hd.mahd,
+          hd.madon,
+          hd.tongtien,
+          hd.giamgia,
+          hd.phiphuthu,
+          hd.trangthai_thanhtoan,
+          hd.ngaylap,
+          dh.ghichu,
+          dh.thoi_gian_tao
+        FROM hoadon hd
+        LEFT JOIN donhang dh ON hd.madon = dh.madon
+        WHERE hd.mahd = $1
+      `,
+        [mahd]
+      );
+
+      console.log('SQL result rows count:', result.rows.length);
+      console.log('SQL result rows:', result.rows);
+
+      // Debug: Check what invoices exist in the database
+      const allInvoices = await this.query(
+        'SELECT mahd, madon FROM hoadon LIMIT 10'
+      );
+      console.log('Available invoices in database:', allInvoices.rows);
+
+      return result.rows[0] || null;
+    } catch (error) {
+      console.error('Error getting invoice data:', error);
+      throw error;
+    }
+  }
+
+  // Get invoice menu items by mahd (invoice ID)
+  async getInvoiceMenuItems(mahd) {
+    try {
+      const result = await this.query(
+        `
+        SELECT 
+          dhct.soluong,
+          dhct.dongia,
+          dhct.thanhtien,
+          m.tenmon,
+          m.dongia as gia,
+          s.tenset
+        FROM hoadon hd
+        INNER JOIN donhang_chitiet dhct ON hd.madon = dhct.madon
+        LEFT JOIN monan m ON dhct.mamon = m.mamon
+        LEFT JOIN setbuffet s ON dhct.maset = s.maset
+        WHERE hd.mahd = $1
+        ORDER BY dhct.id
+      `,
+        [mahd]
+      );
+
+      return result.rows;
+    } catch (error) {
+      console.error('Error getting invoice menu items:', error);
+      throw error;
+    }
+  }
+
+  // Get table performance report data
+  async getTablePerformanceReport(startDate, endDate) {
+    try {
+      console.log('Getting table performance report for period:', {
+        startDate,
+        endDate,
+      }); // Debug log
+
+      const result = await this.query(
+        `
+        SELECT 
+          b.maban,
+          b.tenban,
+          v.tenvung as ten_khu_vuc,
+          b.soghe,
+          -- Số lượt phục vụ = số đơn hàng có maban này trong khoảng thời gian
+          COUNT(DISTINCT CASE 
+            WHEN d.maban IS NOT NULL 
+              AND d.thoi_gian_tao::date >= $1::date 
+              AND d.thoi_gian_tao::date <= $2::date 
+            THEN d.madon 
+          END) as so_luot_phuc_vu,
+          -- Doanh thu = tổng tiền từ hóa đơn của các đơn hàng có maban này
+          COALESCE(SUM(CASE 
+            WHEN d.maban IS NOT NULL 
+              AND d.thoi_gian_tao::date >= $1::date 
+              AND d.thoi_gian_tao::date <= $2::date 
+              AND h.tongtien IS NOT NULL
+            THEN h.tongtien 
+            ELSE 0 
+          END), 0) as doanh_thu,
+          -- Đơn hàng trung bình
+          CASE 
+            WHEN COUNT(DISTINCT CASE 
+              WHEN d.maban IS NOT NULL 
+                AND d.thoi_gian_tao::date >= $1::date 
+                AND d.thoi_gian_tao::date <= $2::date 
+              THEN d.madon 
+            END) > 0 
+            THEN ROUND(
+              COALESCE(SUM(CASE 
+                WHEN d.maban IS NOT NULL 
+                  AND d.thoi_gian_tao::date >= $1::date 
+                  AND d.thoi_gian_tao::date <= $2::date 
+                  AND h.tongtien IS NOT NULL
+                THEN h.tongtien 
+                ELSE 0 
+              END), 0) / 
+              COUNT(DISTINCT CASE 
+                WHEN d.maban IS NOT NULL 
+                  AND d.thoi_gian_tao::date >= $1::date 
+                  AND d.thoi_gian_tao::date <= $2::date 
+                THEN d.madon 
+              END), 2
+            )
+            ELSE 0
+          END as don_hang_trung_binh
+        FROM ban b
+        LEFT JOIN vung v ON b.mavung = v.mavung
+        LEFT JOIN donhang d ON b.maban = d.maban
+        LEFT JOIN hoadon h ON d.madon = h.madon
+        GROUP BY b.maban, b.tenban, v.tenvung, b.soghe
+        ORDER BY doanh_thu DESC, so_luot_phuc_vu DESC
+      `,
+        [startDate, endDate]
+      );
+
+      console.log('Table performance query result:', result.rows); // Debug log
+      return result.rows;
+    } catch (error) {
+      console.error('Error getting table performance report:', error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new Booking();

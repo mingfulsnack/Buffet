@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
-import {
-  showLoadingToast,
-  showValidationError,
-} from '../utils/toast';
+import { showLoadingToast, showError } from '../utils/toast';
 import './InvoicesPage.scss';
 
 const InvoicesPage = () => {
@@ -198,9 +195,46 @@ const InvoicesPage = () => {
       });
     } catch (error) {
       console.error('Error:', error);
-      showValidationError(error);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handlePrintInvoice = async (invoice) => {
+    try {
+      const token = localStorage.getItem('token');
+
+      // Create URL with correct mahd parameter
+      const url = `http://localhost:3000/api/pdf/invoice/${invoice.mahd}`;
+
+      // Fetch the PDF with authorization header
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Không thể tạo hóa đơn PDF');
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+
+      // Create download link
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `Invoice_HD${invoice.mahd}.pdf`;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up the blob URL
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Error printing invoice:', error);
+      showError('Không thể in hóa đơn: ' + error.message);
     }
   };
 
@@ -285,7 +319,6 @@ const InvoicesPage = () => {
           <thead>
             <tr>
               <th>Mã hóa đơn</th>
-              <th>Mã đơn hàng</th>
               <th>Tổng tiền gốc</th>
               <th>Giảm giá</th>
               <th>Phí phụ thu</th>
@@ -306,7 +339,6 @@ const InvoicesPage = () => {
               invoices.map((invoice) => (
                 <tr key={invoice.mahd}>
                   <td className="invoice-id">{invoice.mahd}</td>
-                  <td>{invoice.madon || '-'}</td>
                   <td>{formatCurrency(invoice.tongtien)}</td>
                   <td>
                     {invoice.giamgia ? formatCurrency(invoice.giamgia) : '-'}
@@ -338,6 +370,15 @@ const InvoicesPage = () => {
                       >
                         Sửa
                       </Button>
+                      {invoice.trangthai_thanhtoan === 'Da thanh toan' && (
+                        <Button
+                          variant="primary"
+                          onClick={() => handlePrintInvoice(invoice)}
+                          title="In hóa đơn"
+                        >
+                          In hóa đơn
+                        </Button>
+                      )}
                     </div>
                   </td>
                 </tr>

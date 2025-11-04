@@ -17,6 +17,8 @@ const OrdersPage = () => {
   const [menuData, setMenuData] = useState({ dishes: [], sets: [] });
   const [orderItems, setOrderItems] = useState([]);
   const [orderNote, setOrderNote] = useState('');
+  const [selectedTable, setSelectedTable] = useState('');
+  const [tables, setTables] = useState([]);
   const [menuLoading, setMenuLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -70,20 +72,48 @@ const OrdersPage = () => {
     try {
       setMenuLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:3000/api/orders/menu', {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
 
-      if (!response.ok) {
+      // Fetch menu và tables song song
+      const [menuResponse, tablesResponse] = await Promise.all([
+        fetch('http://localhost:3000/api/orders/menu', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }),
+        fetch('http://localhost:3000/api/tables', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }),
+      ]);
+
+      if (!menuResponse.ok) {
         throw new Error('Failed to fetch menu');
       }
 
-      const data = await response.json();
-      if (data.success) {
-        setMenuData(data.data);
+      const menuData = await menuResponse.json();
+      if (menuData.success) {
+        setMenuData(menuData.data);
+      }
+
+      // Fetch tables (không bắt buộc phải thành công)
+      if (tablesResponse.ok) {
+        const tablesData = await tablesResponse.json();
+        if (tablesData.success) {
+          // Flatten tables from areas structure
+          const allTables = [];
+          tablesData.data.forEach((area) => {
+            area.tables.forEach((table) => {
+              allTables.push({
+                ...table,
+                tenvung: area.tenvung,
+              });
+            });
+          });
+          setTables(allTables);
+        }
       }
     } catch (error) {
       console.error('Error:', error);
@@ -143,12 +173,14 @@ const OrdersPage = () => {
     setEditingOrder(null);
     setOrderItems([]);
     setOrderNote('');
+    setSelectedTable('');
     setShowOrderModal(true);
     fetchMenu();
   };
 
   const handleEditOrder = async (order) => {
     setEditingOrder(order);
+    setSelectedTable(order.maban || '');
     await fetchOrderDetails(order.madon);
     await fetchMenu();
     setShowOrderModal(true);
@@ -199,7 +231,7 @@ const OrdersPage = () => {
   const handleConfirmOrder = async (orderId) => {
     if (
       !window.confirm(
-        'Bạn có chắc chắn muốn xác nhận đơn hàng này? Đơn hàng sẽ được chuyển thành hóa đơn và bị xóa khỏi danh sách.'
+        'Bạn có chắc chắn muốn xác nhận đơn hàng này? Đơn hàng sẽ được chuyển thành hóa đơn.'
       )
     ) {
       return;
@@ -233,8 +265,7 @@ const OrdersPage = () => {
     try {
       await showLoadingToast(confirmOperation(), {
         pending: 'Đang xác nhận đơn hàng...',
-        success:
-          'Xác nhận đơn hàng thành công! Đã tạo hóa đơn và xóa đơn hàng.',
+        success: 'Xác nhận đơn hàng thành công! Đã tạo hóa đơn.',
         error: 'Lỗi khi xác nhận đơn hàng',
       });
     } catch (error) {
@@ -332,6 +363,7 @@ const OrdersPage = () => {
 
       // Log dữ liệu để debug
       console.log('Order items before sending:', orderItems);
+      console.log('Selected table:', selectedTable); // Debug log
 
       const orderData = {
         monAn: orderItems.map((item) => ({
@@ -340,6 +372,7 @@ const OrdersPage = () => {
           soluong: item.soluong,
         })),
         ghichu: orderNote,
+        maban: selectedTable || null,
       };
 
       console.log('Order data being sent:', orderData);
@@ -423,6 +456,7 @@ const OrdersPage = () => {
           <thead>
             <tr>
               <th>Mã đơn</th>
+              <th>Bàn</th>
               <th>Các món được chọn</th>
               <th>Tổng tiền</th>
               <th>Ghi chú</th>
@@ -433,7 +467,7 @@ const OrdersPage = () => {
           <tbody>
             {orders.length === 0 ? (
               <tr>
-                <td colSpan="6" className="text-center">
+                <td colSpan="7" className="text-center">
                   Chưa có đơn hàng nào
                 </td>
               </tr>
@@ -441,6 +475,21 @@ const OrdersPage = () => {
               orders.map((order) => (
                 <tr key={order.madon}>
                   <td>{order.madon}</td>
+                  <td>
+                    {order.tenban ? (
+                      <span>
+                        {order.tenban}
+                        {order.tenvung && (
+                          <small className="text-muted">
+                            {' '}
+                            ({order.tenvung})
+                          </small>
+                        )}
+                      </span>
+                    ) : (
+                      <span className="text-muted">Chưa chọn bàn</span>
+                    )}
+                  </td>
                   <td className="dishes-cell" title={order.monan_text}>
                     {order.monan_text || 'Không có món'}
                   </td>
@@ -449,13 +498,24 @@ const OrdersPage = () => {
                   <td>{formatDate(order.thoi_gian_tao)}</td>
                   <td>
                     <div className="action-buttons">
-                      <button
-                        className="btn btn-sm btn-warning"
-                        onClick={() => handleEditOrder(order)}
-                        title="Sửa"
-                      >
-                        <FaEdit />
-                      </button>
+                      {!order.da_xac_nhan && (
+                        <>
+                          <button
+                            className="btn btn-sm btn-warning"
+                            onClick={() => handleEditOrder(order)}
+                            title="Sửa"
+                          >
+                            <FaEdit />
+                          </button>
+                          <button
+                            className="btn btn-sm btn-success"
+                            onClick={() => handleConfirmOrder(order.madon)}
+                            title="Xác nhận"
+                          >
+                            <FaCheck />
+                          </button>
+                        </>
+                      )}
                       <button
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDeleteOrder(order.madon)}
@@ -463,13 +523,9 @@ const OrdersPage = () => {
                       >
                         <FaTrash />
                       </button>
-                      <button
-                        className="btn btn-sm btn-success"
-                        onClick={() => handleConfirmOrder(order.madon)}
-                        title="Xác nhận"
-                      >
-                        <FaCheck />
-                      </button>
+                      {order.da_xac_nhan && (
+                        <span className="confirmed-badge">Đã xác nhận</span>
+                      )}
                     </div>
                   </td>
                 </tr>
@@ -491,6 +547,23 @@ const OrdersPage = () => {
             <div className="loading">Đang tải menu...</div>
           ) : (
             <>
+              {/* Table Selection */}
+              <div className="table-selection">
+                <h3>Chọn bàn</h3>
+                <select
+                  value={selectedTable}
+                  onChange={(e) => setSelectedTable(e.target.value)}
+                  className="form-control"
+                >
+                  <option value="">Chọn bàn (tùy chọn)</option>
+                  {tables.map((table) => (
+                    <option key={table.maban} value={table.maban}>
+                      {table.tenban} - {table.tenvung} ({table.soghe} chỗ)
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Menu Selection */}
               <div className="menu-section">
                 <h3>Chọn món</h3>

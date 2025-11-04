@@ -106,7 +106,9 @@ const getMenuForOrder = async (req, res) => {
 // Tạo đơn hàng
 const createOrder = async (req, res) => {
   try {
-    const { monAn, ghichu } = req.body;
+    const { monAn, ghichu, maban } = req.body;
+
+    console.log('Received order data:', { monAn, ghichu, maban }); // Debug log
 
     if (!monAn || !Array.isArray(monAn) || monAn.length === 0) {
       return res
@@ -128,7 +130,7 @@ const createOrder = async (req, res) => {
       }
     }
 
-    const order = await Order.createOrder({ monAn, ghichu });
+    const order = await Order.createOrder({ monAn, ghichu, maban });
     res
       .status(201)
       .json(formatResponse(true, order, 'Tạo đơn hàng thành công'));
@@ -142,7 +144,9 @@ const createOrder = async (req, res) => {
 const updateOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const { monAn, ghichu } = req.body;
+    const { monAn, ghichu, maban } = req.body;
+
+    console.log('Received update order data:', { id, monAn, ghichu, maban }); // Debug log
 
     if (!monAn || !Array.isArray(monAn) || monAn.length === 0) {
       return res
@@ -164,7 +168,7 @@ const updateOrder = async (req, res) => {
       }
     }
 
-    const order = await Order.updateOrder(id, { monAn, ghichu });
+    const order = await Order.updateOrder(id, { monAn, ghichu, maban });
 
     if (!order) {
       return res

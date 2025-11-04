@@ -13,6 +13,8 @@ import {
   ArcElement,
 } from 'chart.js';
 import api from '../services/api';
+import Button from '../components/Button';
+import Modal from '../components/Modal';
 import './ReportsPage.scss';
 
 ChartJS.register(
@@ -46,6 +48,17 @@ const ReportsPage = () => {
   const [overallStats, setOverallStats] = useState(null);
   const [topRevenueDays, setTopRevenueDays] = useState([]);
   const [paymentStats, setPaymentStats] = useState([]);
+
+  // Report generation modal states
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportForm, setReportForm] = useState({
+    reportType: 'table-performance',
+    startDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .split('T')[0],
+    endDate: new Date().toISOString().split('T')[0],
+  });
+  const [generatingReport, setGeneratingReport] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -126,9 +139,21 @@ const ReportsPage = () => {
         const dailyDataMap = {};
 
         // Map dữ liệu thực tế
+        // Some responses (when quickly switching report types) may contain
+        // items without a `date` field (e.g. monthly/yearly payloads). Skip
+        // any item that doesn't have a usable date to avoid runtime errors.
         revenueData.forEach((item) => {
-          const dateKey = item.date.split('T')[0]; // Lấy phần ngày yyyy-mm-dd
-          dailyDataMap[dateKey] = parseFloat(item.total_revenue) || 0;
+          if (!item) return;
+
+          // Accept a few possible date-like fields and normalize to yyyy-mm-dd
+          const rawDate = item.date ?? item.day ?? item.date_key ?? null;
+          if (!rawDate || typeof rawDate !== 'string') return;
+
+          const dateKey = rawDate.split('T')[0]; // Lấy phần ngày yyyy-mm-dd
+
+          // Accumulate in case there are multiple records for the same day
+          const value = parseFloat(item.total_revenue) || 0;
+          dailyDataMap[dateKey] = (dailyDataMap[dateKey] || 0) + value;
         });
 
         // Tạo tất cả ngày từ startDate đến endDate
@@ -306,6 +331,65 @@ const ReportsPage = () => {
     return baseOptions;
   };
 
+  const handleReportFormChange = (e) => {
+    const { name, value } = e.target;
+    setReportForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleGenerateReport = async () => {
+    setGeneratingReport(true);
+
+    try {
+      const token = localStorage.getItem('token');
+
+      let url = '';
+      let filename = '';
+
+      switch (reportForm.reportType) {
+        case 'table-performance':
+          url = `http://localhost:3000/api/pdf/table-performance?startDate=${reportForm.startDate}&endDate=${reportForm.endDate}`;
+          filename = `Table_Performance_Report_${reportForm.startDate}_${reportForm.endDate}.pdf`;
+          break;
+        // Add more report types here in the future
+        default:
+          throw new Error('Loại báo cáo không được hỗ trợ');
+      }
+
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Không thể tạo báo cáo PDF');
+      }
+
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      // Clean up
+      window.URL.revokeObjectURL(downloadUrl);
+      setShowReportModal(false);
+    } catch (error) {
+      console.error('Error generating report:', error);
+      alert('Không thể tạo báo cáo: ' + error.message);
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
   const chartOptions = getChartOptions();
 
   const pieChartOptions = {
@@ -325,6 +409,16 @@ const ReportsPage = () => {
     <div className="reports-page">
       <div className="reports-header">
         <h2>Báo cáo thống kê doanh thu</h2>
+
+        <div className="header-actions">
+          <Button
+            variant="primary"
+            onClick={() => setShowReportModal(true)}
+            style={{ marginLeft: 'auto' }}
+          >
+            Tạo báo cáo
+          </Button>
+        </div>
 
         <div className="report-filters">
           <div className="filter-group">
@@ -439,14 +533,14 @@ const ReportsPage = () => {
                   {overallStats.total_invoices || 0}
                 </p>
               </div>
-              <div className="stat-card">
+              {/* <div className="stat-card">
                 <h4>Doanh thu trung bình</h4>
                 <p className="stat-value average">
                   {formatCurrency(
                     parseFloat(overallStats.average_revenue) || 0
                   )}
                 </p>
-              </div>
+              </div> */}
             </div>
           )}
 
@@ -487,6 +581,68 @@ const ReportsPage = () => {
           </div>
         </div>
       )}
+
+      {/* Report Generation Modal */}
+      <Modal
+        isOpen={showReportModal}
+        onClose={() => setShowReportModal(false)}
+        title="Tạo báo cáo"
+        size="medium"
+      >
+        <div className="report-form">
+          <div className="form-group">
+            <label htmlFor="reportType">Loại báo cáo:</label>
+            <select
+              id="reportType"
+              name="reportType"
+              value={reportForm.reportType}
+              onChange={handleReportFormChange}
+            >
+              <option value="table-performance">Báo cáo hiệu suất bàn</option>
+              {/* Add more report types here in the future */}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="startDate">Từ ngày:</label>
+            <input
+              type="date"
+              id="startDate"
+              name="startDate"
+              value={reportForm.startDate}
+              onChange={handleReportFormChange}
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="endDate">Đến ngày:</label>
+            <input
+              type="date"
+              id="endDate"
+              name="endDate"
+              value={reportForm.endDate}
+              onChange={handleReportFormChange}
+            />
+          </div>
+
+          <div className="modal-actions">
+            <Button
+              variant="cancel"
+              onClick={() => setShowReportModal(false)}
+              disabled={generatingReport}
+            >
+              Hủy
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleGenerateReport}
+              disabled={generatingReport}
+            >
+              {generatingReport ? 'Đang tạo...' : 'Tạo báo cáo'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };

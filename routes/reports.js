@@ -25,4 +25,7 @@ router.get('/stats/top-revenue-days', reportController.getTopRevenueDays);
 // Lấy thống kê theo trạng thái thanh toán
 router.get('/stats/payment-status', reportController.getPaymentStatusStats);
 
+// Lấy báo cáo hiệu suất bàn
+router.get('/table-performance', reportController.getTablePerformanceReport);
+
 module.exports = router;

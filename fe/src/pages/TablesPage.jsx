@@ -358,25 +358,6 @@ const TablesPage = () => {
         title={editingTable ? 'Sửa thông tin bàn' : 'Thêm bàn mới'}
       >
         <form onSubmit={handleSaveTable} className="table-form">
-          {/* Debug info */}
-          {import.meta.env.DEV && (
-            <div
-              style={{
-                background: '#f0f0f0',
-                padding: '10px',
-                marginBottom: '10px',
-                fontSize: '12px',
-              }}
-            >
-              <strong>Debug:</strong>
-              <br />
-              Form Data: {JSON.stringify(formData, null, 2)}
-              <br />
-              Areas: {areas.length} items
-              <br />
-              Editing: {editingTable ? editingTable.maban : 'None'}
-            </div>
-          )}
           <div className="form-group">
             <label htmlFor="tenban">Tên bàn *</label>
             <input

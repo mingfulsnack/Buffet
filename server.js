@@ -28,6 +28,7 @@ const employeeRoutes = require('./routes/employees');
 const reportRoutes = require('./routes/reports');
 const orderRoutes = require('./routes/orderRoutes');
 const invoiceRoutes = require('./routes/invoices');
+const pdfRoutes = require('./routes/pdf');
 
 // Security middleware
 app.use(helmet());
@@ -113,6 +114,7 @@ app.use('/api/employees', employeeRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/invoices', invoiceRoutes);
+app.use('/api/pdf', pdfRoutes);
 
 // Welcome route
 app.get('/', (req, res) => {

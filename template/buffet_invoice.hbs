@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hoá Đơn {{invoiceNumber}}</title>
+    <style>
+        /* Force page size when printing to PDF */
+        @page {
+            size: A4;
+            margin: 12mm;
+        }
+
+        /* Reset and set printable area to A4 width */
+        html,
+        body {
+            width: 210mm;
+            /* A4 width */
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            background: #fff;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            font-size: 12px;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            background-color: #fff;
+        }
+
+        .invoice-container {
+            /* Make container exactly the printable width (A4 minus page margins)
+               Using calc to subtract the page margins (12mm left + 12mm right)
+            */
+            width: calc(210mm - 24mm);
+            max-width: 100%;
+            box-sizing: border-box;
+            margin: 0 auto;
+            border: 1px solid #eee;
+            padding: 6mm;
+            /* content padding inside the printable area */
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.04);
+            overflow: visible;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 15px;
+        }
+
+        .header h1 {
+            margin: 0 0 5px 0;
+            font-size: 18px;
+            font-weight: bold;
+            color: #000;
+        }
+
+        .header p {
+            margin: 2px 0;
+            font-size: 11px;
+            color: #555;
+        }
+
+        .invoice-title {
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 25px 0;
+            text-transform: uppercase;
+        }
+
+        .invoice-details {
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+
+        .invoice-details table {
+            width: 100%;
+        }
+
+        .invoice-details td {
+            padding: 2px 0;
+        }
+
+        .invoice-details strong {
+            display: inline-block;
+            width: 90px;
+        }
+
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+
+        .items-table th,
+        .items-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .items-table th {
+            background-color: #f8f8f8;
+            font-weight: bold;
+        }
+
+        .items-table td.center {
+            text-align: center;
+        }
+
+        .items-table td.right {
+            text-align: right;
+        }
+
+        /* Styles for table footer (tfoot) */
+        .items-table tfoot td {
+            border: 1px solid #ddd;
+            /* Ensure borders match tbody */
+            padding: 8px;
+            font-weight: bold;
+            /* Make summary text bold */
+        }
+
+        .items-table tfoot tr:last-child td {
+            font-size: 14px;
+            /* Make the final total slightly larger */
+            border-top: 2px solid #333;
+            /* Thicker border above final total */
+        }
+
+        .footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 10px;
+            color: #777;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .signature-area {
+            margin-top: 50px;
+            /* make a fixed-width signature box located near the right edge */
+            width: 70mm;
+            margin-left: auto;
+            /* push to the right */
+            margin-right: 12mm;
+            /* align with page margin */
+            text-align: center;
+            /* center content inside the signature box */
+        }
+
+        .signature-area p {
+            margin: 0 0 10px 0;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="invoice-container">
+        <div class="header">
+            <h1>NHÀ HÀNG BUFFET</h1>
+            <p>Địa chỉ nhà hàng: Số 20-21 Lô 8 Khu Liền Kề, Ng.67 Đ. Phùng Khoang, Hà Nội</p>
+            <p>Điện thoại: 0817 929 222</p>
+        </div>
+
+        <div class="invoice-title">
+            Hoá Đơn Thanh Toán
+        </div>
+
+        <div class="invoice-details">
+            <table>
+                <tr>
+                    <td><strong>Mã HĐ:</strong> {{invoiceNumber}}</td>
+                    <td><strong>Ngày lập:</strong> {{ngay_lap}}</td>
+                </tr>
+                <tr>
+                    <td><strong>Mã đơn:</strong> {{madon}}</td>
+                    <td><strong>Trạng thái:</strong> {{trangthai_thanhtoan}}</td>
+                </tr>
+                <tr>
+                    <td><strong>Khách hàng:</strong> {{guest_hoten}}</td>
+                    <td><strong>SĐT:</strong> {{guest_sodienthoai}}</td>
+                </tr>
+                {{#if so_ban}}
+                <tr>
+                    <td><strong>Số bàn:</strong> {{so_ban}}</td>
+                    <td><strong>Số người:</strong> {{so_nguoi}}</td>
+                </tr>
+                {{/if}}
+            </table>
+        </div>
+
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%;" class="center">STT</th>
+                    <th style="width: 45%;">Tên món</th>
+                    <th style="width: 10%;" class="center">Số lượng</th>
+                    <th style="width: 20%;" class="right">Đơn giá</th>
+                    <th style="width: 20%;" class="right">Thành tiền</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each items}}
+                <tr>
+                    <td class="center">{{index}}</td>
+                    <td>{{ten_mon}}</td>
+                    <td class="center">{{quantity}}</td>
+                    <td class="right">{{don_gia}}</td>
+                    <td class="right">{{amount}}</td>
+                </tr>
+                {{/each}}
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" class="right">Tạm tính:</td>
+                    <td class="right">{{subtotal}}</td>
+                </tr>
+                {{#if rawDiscount}}
+                {{#if (gt rawDiscount 0)}}
+                <tr>
+                    <td colspan="4" class="right">Giảm giá:</td>
+                    <td class="right">-{{discount}}</td>
+                </tr>
+                {{/if}}
+                {{/if}}
+                {{#if rawExtraFee}}
+                {{#if (gt rawExtraFee 0)}}
+                <tr>
+                    <td colspan="4" class="right">Phí phụ thu:</td>
+                    <td class="right">+{{extraFee}}</td>
+                </tr>
+                {{/if}}
+                {{/if}}
+                <tr>
+                    <td colspan="4" class="right">Tổng cộng:</td>
+                    <td class="right">{{total}}</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div class="footer">
+            Xin cảm ơn quý khách và hẹn gặp lại!
+        </div>
+
+        <div class="signature-area">
+            <p>Ngày ...... tháng ...... năm ......</p>
+            <p>Người lập đơn</p>
+        </div>
+    </div>
+</body>
+
+</html>

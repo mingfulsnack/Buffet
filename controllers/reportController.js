@@ -125,6 +125,29 @@ const getPaymentStatusStats = async (req, res) => {
   }
 };
 
+// Get table performance report data
+const getTablePerformanceReport = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Please provide start date and end date'));
+    }
+
+    const Booking = require('../models/Booking');
+    const data = await Booking.getTablePerformanceReport(startDate, endDate);
+
+    res.json(
+      formatResponse(true, data, 'Get table performance report successfully')
+    );
+  } catch (error) {
+    console.error('Get table performance report error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
+  }
+};
+
 module.exports = {
   getRevenueByDate,
   getRevenueByMonth,
@@ -132,4 +155,5 @@ module.exports = {
   getOverallStats,
   getTopRevenueDays,
   getPaymentStatusStats,
+  getTablePerformanceReport,
 };

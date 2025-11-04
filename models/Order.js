@@ -11,10 +11,23 @@ class Order extends BaseModel {
 
   // Tạo đơn hàng mới
   static async createOrder(orderData) {
-    const { monAn = [], ghichu = '' } = orderData;
+    const { monAn = [], ghichu = '', maban = null } = orderData;
+    console.log('Order.createOrder received data:', { monAn, ghichu, maban }); // Debug log
+
     const baseModel = new BaseModel('donhang');
 
     return await baseModel.transaction(async (client) => {
+      // Validate maban nếu được cung cấp
+      if (maban) {
+        const banCheck = await client.query(
+          'SELECT maban FROM ban WHERE maban = $1',
+          [maban]
+        );
+        if (banCheck.rows.length === 0) {
+          throw new Error(`Bàn số ${maban} không tồn tại`);
+        }
+      }
+
       // Tính tổng tiền
       let tongTien = 0;
       const chiTietItems = [];
@@ -53,10 +66,10 @@ class Order extends BaseModel {
 
       // Tạo đơn hàng
       const orderResult = await client.query(
-        `INSERT INTO donhang (tongtien, ghichu, thoi_gian_tao) 
-         VALUES ($1, $2, NOW()) 
+        `INSERT INTO donhang (tongtien, ghichu, maban, thoi_gian_tao) 
+         VALUES ($1, $2, $3, NOW()) 
          RETURNING *`,
-        [tongTien, ghichu || null]
+        [tongTien, ghichu || null, maban]
       );
 
       const order = orderResult.rows[0];
@@ -91,7 +104,12 @@ class Order extends BaseModel {
         d.madon,
         d.tongtien,
         d.ghichu,
+        d.maban,
+        b.tenban,
+        v.tenvung,
         d.thoi_gian_tao,
+        CASE WHEN h.mahd IS NOT NULL THEN true ELSE false END as da_xac_nhan,
+        h.mahd as mahd,
         json_agg(
           json_build_object(
             'id', dc.id,
@@ -110,7 +128,10 @@ class Order extends BaseModel {
       LEFT JOIN donhang_chitiet dc ON d.madon = dc.madon
       LEFT JOIN monan m ON dc.mamon = m.mamon
       LEFT JOIN setbuffet s ON dc.maset = s.maset
-      GROUP BY d.madon, d.tongtien, d.ghichu, d.thoi_gian_tao
+      LEFT JOIN ban b ON d.maban = b.maban
+      LEFT JOIN vung v ON b.mavung = v.mavung
+      LEFT JOIN hoadon h ON d.madon = h.madon
+      GROUP BY d.madon, d.tongtien, d.ghichu, d.maban, b.tenban, v.tenvung, d.thoi_gian_tao, h.mahd
       ORDER BY d.thoi_gian_tao DESC
     `;
 
@@ -156,10 +177,28 @@ class Order extends BaseModel {
 
   // Cập nhật đơn hàng
   static async updateOrder(madon, orderData) {
-    const { monAn = [], ghichu = '' } = orderData;
+    const { monAn = [], ghichu = '', maban = null } = orderData;
+    console.log('Order.updateOrder received data:', {
+      madon,
+      monAn,
+      ghichu,
+      maban,
+    }); // Debug log
+
     const baseModel = new BaseModel('donhang');
 
     return await baseModel.transaction(async (client) => {
+      // Validate maban nếu được cung cấp
+      if (maban) {
+        const banCheck = await client.query(
+          'SELECT maban FROM ban WHERE maban = $1',
+          [maban]
+        );
+        if (banCheck.rows.length === 0) {
+          throw new Error(`Bàn số ${maban} không tồn tại`);
+        }
+      }
+
       // Xóa chi tiết cũ
       await client.query('DELETE FROM donhang_chitiet WHERE madon = $1', [
         madon,
@@ -204,10 +243,10 @@ class Order extends BaseModel {
       // Cập nhật đơn hàng
       const orderResult = await client.query(
         `UPDATE donhang 
-         SET tongtien = $1, ghichu = $2
-         WHERE madon = $3 
+         SET tongtien = $1, ghichu = $2, maban = $3
+         WHERE madon = $4 
          RETURNING *`,
-        [tongTien, ghichu || null, madon]
+        [tongTien, ghichu || null, maban, madon]
       );
 
       // Tạo chi tiết mới
@@ -250,7 +289,7 @@ class Order extends BaseModel {
     });
   }
 
-  // Xác nhận đơn hàng (tạo hóa đơn và xóa đơn hàng)
+  // Xác nhận đơn hàng (tạo hóa đơn nhưng không xóa đơn hàng)
   static async confirmOrder(madon) {
     const baseModel = new BaseModel('donhang');
 
@@ -267,6 +306,16 @@ class Order extends BaseModel {
 
       const order = orderResult.rows[0];
 
+      // Kiểm tra xem đã có hóa đơn cho đơn hàng này chưa
+      const existingInvoiceResult = await client.query(
+        'SELECT mahd FROM hoadon WHERE madon = $1',
+        [madon]
+      );
+
+      if (existingInvoiceResult.rows.length > 0) {
+        throw new Error('Đơn hàng này đã được xác nhận trước đó');
+      }
+
       // Tính tổng tiền từ chi tiết đơn hàng
       const totalResult = await client.query(
         'SELECT SUM(thanhtien) as tongtien FROM donhang_chitiet WHERE madon = $1',
@@ -275,7 +324,7 @@ class Order extends BaseModel {
 
       const tongtien = totalResult.rows[0].tongtien || order.tongtien || 0;
 
-      // Tạo hóa đơn
+      // Tạo hóa đơn nhưng không xóa đơn hàng
       const invoiceResult = await client.query(
         `INSERT INTO hoadon (madon, tongtien, giamgia, phiphuthu, ngaylap) 
          VALUES ($1, $2, NULL, NULL, NOW()) 
@@ -285,11 +334,8 @@ class Order extends BaseModel {
 
       const invoice = invoiceResult.rows[0];
 
-      // Sau khi tạo hóa đơn thành công, xóa chi tiết đơn hàng và đơn hàng
-      await client.query('DELETE FROM donhang_chitiet WHERE madon = $1', [
-        madon,
-      ]);
-      await client.query('DELETE FROM donhang WHERE madon = $1', [madon]);
+      // Cập nhật trạng thái đơn hàng thành đã xác nhận (nếu có cột trạng thái)
+      // Nếu không có cột trạng thái, có thể thêm sau
 
       return invoice;
     });
