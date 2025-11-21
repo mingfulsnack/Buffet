@@ -24,7 +24,7 @@ const getTables = async (req, res) => {
 // Lấy danh sách bàn có thể đặt tại thời điểm cụ thể
 const getAvailableTablesAtTime = async (req, res) => {
   try {
-    const { thoigian_dat, songuoi } = req.query;
+    const { thoigian_dat, songuoi, mavung } = req.query;
 
     if (!thoigian_dat) {
       return res
@@ -44,7 +44,8 @@ const getAvailableTablesAtTime = async (req, res) => {
 
     const tablesByArea = await Table.findAvailableTablesAtTime(
       bookingTime,
-      songuoi ? parseInt(songuoi) : null
+      songuoi ? parseInt(songuoi) : null,
+      mavung ? parseInt(mavung) : null
     );
 
     res.json(

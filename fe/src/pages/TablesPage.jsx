@@ -2,10 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { tableAPI } from '../services/api';
 import Modal from '../components/Modal';
 import Button from '../components/Button';
-import {
-  showLoadingToast,
-  showValidationError,
-} from '../utils/toast';
+import { showLoadingToast, showValidationError } from '../utils/toast';
 import './TablesPage.scss';
 
 const TablesPage = () => {
@@ -186,7 +183,8 @@ const TablesPage = () => {
 
       setIsModalOpen(false);
       resetForm();
-      loadTables();
+      // Reload tables sau khi lưu thành công để hiển thị dữ liệu mới
+      await loadTables();
     };
 
     try {

@@ -216,7 +216,7 @@ const AdminBookingsPage = () => {
                       booking.khachhang_sodienthoai ||
                       'N/A'}
                   </td>
-                  <td>{booking.ban_tenban || `Bàn ${booking.maban}`}</td>
+                  <td>{booking.tenban}</td>
                   <td>{booking.songuoi}</td>
                   <td>{formatDateTime(booking.thoigian_dat)}</td>
                   <td>

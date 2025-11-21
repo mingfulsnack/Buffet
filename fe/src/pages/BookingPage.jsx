@@ -123,6 +123,8 @@ const BookingPage = () => {
         const params = {
           thoigian_dat: bookingForm.thoigian_dat,
           songuoi: bookingForm.songuoi || undefined,
+          // Include selected area filter when user chooses a specific area
+          ...(selectedArea !== 'all' && { mavung: selectedArea }),
           // Add timestamp to prevent caching issues
           _refresh: Date.now(),
         };
@@ -173,7 +175,12 @@ const BookingPage = () => {
       setSelectedTable(null);
       setBookingForm((prev) => ({ ...prev, maban: null }));
     }
-  }, [areas.length, bookingForm.thoigian_dat, bookingForm.songuoi]); // Depend on time and guest count, but not selectedTable to avoid infinite loops
+  }, [
+    areas.length,
+    bookingForm.thoigian_dat,
+    bookingForm.songuoi,
+    selectedArea,
+  ]); // Depend on time, guest count and selected area
 
   // Clear selected table if it's no longer available
   useEffect(() => {

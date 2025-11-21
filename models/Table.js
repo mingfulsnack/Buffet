@@ -26,25 +26,24 @@ class Table extends BaseModel {
         b.*,
         v.tenvung, 
         v.mota as vung_mota,
-        -- Tính trạng thái động dựa trên thời gian
+        -- Ưu tiên trạng thái tĩnh từ DB, sau đó mới tính động
         CASE 
-          -- Nếu bàn đang được sử dụng (có booking đang diễn ra)
+          -- Nếu admin đã set trạng thái thủ công, dùng trạng thái đó
+          WHEN b.trangthai IN ('DangSuDung', 'DaDat', 'Lock', 'BaoTri') THEN b.trangthai
+          
+          -- Nếu trạng thái là Trong, kiểm tra có booking không
           WHEN EXISTS (
             SELECT 1 FROM phieudatban p 
             WHERE p.maban = b.maban 
               AND p.trangthai = 'DangSuDung'
           ) THEN 'DangSuDung'
           
-          -- Nếu có đặt bàn trong khoảng thời gian sắp tới (30 phút trước đến 2 giờ sau)
           WHEN EXISTS (
             SELECT 1 FROM phieudatban p 
             WHERE p.maban = b.maban 
               AND p.trangthai IN ('DaXacNhan', 'DaDat')
               AND p.thoigian_dat BETWEEN NOW() - INTERVAL '30 minutes' AND NOW() + INTERVAL '2 hours'
           ) THEN 'DaDat'
-          
-          -- Nếu bàn bị khóa hoặc bảo trì
-          WHEN b.trangthai IN ('Lock', 'BaoTri') THEN b.trangthai
           
           -- Mặc định là trống
           ELSE 'Trong'
@@ -296,13 +295,19 @@ class Table extends BaseModel {
   }
 
   // Lấy danh sách bàn với trạng thái tại thời điểm cụ thể (cho booking form)
-  async findAvailableTablesAtTime(thoigian_dat, songuoi = null) {
+  async findAvailableTablesAtTime(thoigian_dat, songuoi = null, mavung = null) {
     const params = [thoigian_dat];
     let sogheFilter = '';
+    let mavungFilter = '';
 
     if (songuoi) {
       params.push(songuoi);
       sogheFilter = `AND b.soghe >= $${params.length}`;
+    }
+
+    if (mavung) {
+      params.push(mavung);
+      mavungFilter = `AND b.mavung = $${params.length}`;
     }
 
     const result = await this.query(
@@ -333,7 +338,7 @@ class Table extends BaseModel {
         
       FROM ${this.tableName} b
       JOIN vung v ON b.mavung = v.mavung
-      WHERE 1=1 ${sogheFilter}
+      WHERE 1=1 ${sogheFilter} ${mavungFilter}
       ORDER BY v.tenvung, b.tenban
     `,
       params
