@@ -13,6 +13,7 @@ import './BookingPage.scss';
 const BookingPage = () => {
   const [step, setStep] = useState(1); // 1: Chọn bàn, 2: Thông tin khách, 3: Xác nhận
   const [loading, setLoading] = useState(true);
+  const [loadingTables, setLoadingTables] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Prevent page scroll on interactions
@@ -117,7 +118,7 @@ const BookingPage = () => {
         return;
 
       isLoadingTables.current = true;
-      setLoading(true);
+      setLoadingTables(true);
       try {
         // Use new API to get available tables at specific time
         const params = {
@@ -162,7 +163,7 @@ const BookingPage = () => {
         }
       } finally {
         isLoadingTables.current = false;
-        setLoading(false);
+        setLoadingTables(false);
       }
     };
 
@@ -477,11 +478,11 @@ const BookingPage = () => {
                     trống
                   </p>
                 </div>
+              ) : loadingTables ? (
+                <p className="no-tables">🔄 Đang tải danh sách bàn...</p>
               ) : tables.length === 0 ? (
                 <p className="no-tables">
-                  {loading
-                    ? '🔄 Đang tải danh sách bàn...'
-                    : '❌ Không có bàn trống tại thời điểm này'}
+                  ❌ Không có bàn trống tại thời điểm này
                 </p>
               ) : (
                 tables.map((area) => (

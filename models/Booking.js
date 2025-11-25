@@ -150,6 +150,9 @@ class Booking extends BaseModel {
 
   // Lấy danh sách đặt bàn với thông tin chi tiết
   async findAllWithDetails(conditions = {}, page = 1, limit = 10) {
+    // Tự động cập nhật trạng thái các booking quá hạn trước khi lấy danh sách
+    await this.autoUpdateExpiredBookings();
+
     let whereClause = 'WHERE 1=1';
     const params = [];
     let paramCount = 0;
@@ -703,6 +706,39 @@ class Booking extends BaseModel {
     } catch (error) {
       console.error('Error getting table performance report:', error);
       throw error;
+    }
+  }
+
+  // Tự động cập nhật trạng thái các đặt bàn quá hạn
+  async autoUpdateExpiredBookings() {
+    try {
+      // Cập nhật tất cả booking có thời gian đặt < hiện tại và trạng thái vẫn là DaDat hoặc DaXacNhan
+      const result = await this.query(
+        `
+        UPDATE ${this.tableName}
+        SET trangthai = 'DaHuy',
+            ghichu = CASE 
+              WHEN ghichu IS NULL OR ghichu = '' THEN 'Tự động hủy do quá hạn'
+              ELSE ghichu || ' (Tự động hủy do quá hạn)'
+            END
+        WHERE trangthai IN ('DaDat', 'DaXacNhan')
+          AND thoigian_dat < NOW()
+        RETURNING maphieu
+      `
+      );
+
+      if (result.rows.length > 0) {
+        console.log(
+          `🔄 Tự động hủy ${result.rows.length} đặt bàn quá hạn:`,
+          result.rows.map((r) => r.maphieu)
+        );
+      }
+
+      return result.rows.length;
+    } catch (error) {
+      console.error('Error auto-updating expired bookings:', error);
+      // Không throw error để không ảnh hưởng đến flow chính
+      return 0;
     }
   }
 }
