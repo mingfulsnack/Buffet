@@ -565,14 +565,17 @@ const ReportsPage = () => {
               <div className="top-revenue-days">
                 <h3>Top 5 ngày doanh thu cao nhất</h3>
                 <div className="revenue-list">
-                  {topRevenueDays.map((day, index) => (
-                    <div key={index} className="revenue-item">
-                      <span className="date">{formatDate(day.date)}</span>
-                      <span className="revenue">
-                        {formatCurrency(parseFloat(day.total_revenue) || 0)}
-                      </span>
-                    </div>
-                  ))}
+                  {topRevenueDays.map((day, index) => {
+                    const revenue = parseFloat(day.total_revenue) || 0;
+                    return (
+                      <div key={index} className="revenue-item">
+                        <span className="date">{formatDate(day.date)}</span>
+                        <span className="revenue">
+                          {formatCurrency(revenue)}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
