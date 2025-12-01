@@ -57,6 +57,7 @@ const ReportsPage = () => {
       .toISOString()
       .split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
+    year: new Date().getFullYear(),
   });
   const [generatingReport, setGeneratingReport] = useState(false);
 
@@ -353,6 +354,10 @@ const ReportsPage = () => {
           url = `http://localhost:3000/api/pdf/table-performance?startDate=${reportForm.startDate}&endDate=${reportForm.endDate}`;
           filename = `Table_Performance_Report_${reportForm.startDate}_${reportForm.endDate}.pdf`;
           break;
+        case 'monthly-revenue':
+          url = `http://localhost:3000/api/pdf/monthly-revenue?year=${reportForm.year}`;
+          filename = `Monthly_Revenue_Report_${reportForm.year}.pdf`;
+          break;
         // Add more report types here in the future
         default:
           throw new Error('Loại báo cáo không được hỗ trợ');
@@ -599,31 +604,51 @@ const ReportsPage = () => {
               onChange={handleReportFormChange}
             >
               <option value="table-performance">Báo cáo hiệu suất bàn</option>
+              <option value="monthly-revenue">Báo cáo doanh thu tháng</option>
               {/* Add more report types here in the future */}
             </select>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="startDate">Từ ngày:</label>
-            <input
-              type="date"
-              id="startDate"
-              name="startDate"
-              value={reportForm.startDate}
-              onChange={handleReportFormChange}
-            />
-          </div>
+          {reportForm.reportType === 'table-performance' && (
+            <>
+              <div className="form-group">
+                <label htmlFor="startDate">Từ ngày:</label>
+                <input
+                  type="date"
+                  id="startDate"
+                  name="startDate"
+                  value={reportForm.startDate}
+                  onChange={handleReportFormChange}
+                />
+              </div>
 
-          <div className="form-group">
-            <label htmlFor="endDate">Đến ngày:</label>
-            <input
-              type="date"
-              id="endDate"
-              name="endDate"
-              value={reportForm.endDate}
-              onChange={handleReportFormChange}
-            />
-          </div>
+              <div className="form-group">
+                <label htmlFor="endDate">Đến ngày:</label>
+                <input
+                  type="date"
+                  id="endDate"
+                  name="endDate"
+                  value={reportForm.endDate}
+                  onChange={handleReportFormChange}
+                />
+              </div>
+            </>
+          )}
+
+          {reportForm.reportType === 'monthly-revenue' && (
+            <div className="form-group">
+              <label htmlFor="year">Năm:</label>
+              <input
+                type="number"
+                id="year"
+                name="year"
+                value={reportForm.year}
+                onChange={handleReportFormChange}
+                min="2015"
+                max="2035"
+              />
+            </div>
+          )}
 
           <div className="modal-actions">
             <Button

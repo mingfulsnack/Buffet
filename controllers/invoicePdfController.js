@@ -148,6 +148,48 @@ const buildTableReportData = async (startDate, endDate) => {
   }
 };
 
+// Build monthly revenue report data
+const buildMonthlyRevenueReportData = async (year) => {
+  try {
+    const Report = require('../models/Report');
+
+    // Get monthly revenue data
+    const monthlyData = await Report.getRevenueByMonth(parseInt(year));
+
+    const items = [];
+    let totalRevenue = 0;
+    const monthlyDataMap = {};
+
+    // Map dữ liệu thực tế
+    monthlyData.forEach((item) => {
+      monthlyDataMap[item.month] = parseFloat(item.total_revenue) || 0;
+    });
+
+    // Tạo đầy đủ 12 tháng
+    for (let month = 1; month <= 12; month++) {
+      const revenue = monthlyDataMap[month] || 0;
+      items.push({
+        index: month,
+        month_name: `Tháng ${month}`,
+        revenue: revenue.toLocaleString('vi-VN') + '₫',
+      });
+      totalRevenue += revenue;
+    }
+
+    const data = {
+      title: 'BÁO CÁO DOANH THU THÁNG',
+      year: year,
+      items,
+      totalRevenue: totalRevenue.toLocaleString('vi-VN') + '₫',
+    };
+
+    return data;
+  } catch (error) {
+    console.error('Error building monthly revenue report data:', error);
+    throw error;
+  }
+};
+
 // Generate PDF using Puppeteer
 const generatePdfFromHtml = async (html) => {
   let browser;
@@ -305,9 +347,50 @@ const createTableReportPdf = async (req, res) => {
   }
 };
 
+// Create monthly revenue report PDF
+const createMonthlyRevenueReportPdf = async (req, res) => {
+  try {
+    const { year } = req.query;
+
+    if (!year) {
+      return res.status(400).json(formatErrorResponse('year is required'));
+    }
+
+    const data = await buildMonthlyRevenueReportData(year);
+
+    const templatePath = path.join(
+      __dirname,
+      '..',
+      'template',
+      'monthly_revenue_report.hbs'
+    );
+    const html = renderTemplate(templatePath, data);
+    const pdfBuffer = await generatePdfFromHtml(html);
+
+    if (!pdfBuffer || pdfBuffer.length === 0) {
+      throw new Error('Failed to generate PDF - empty buffer');
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Length', pdfBuffer.length.toString());
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="Monthly_Revenue_Report_${year}.pdf"`
+    );
+    res.end(pdfBuffer);
+  } catch (error) {
+    console.error('Create monthly revenue report error:', error);
+    res
+      .status(500)
+      .json(formatErrorResponse(error.message || 'Lỗi khi tạo báo cáo'));
+  }
+};
+
 module.exports = {
   createInvoicePdf,
   createTableReportPdf,
+  createMonthlyRevenueReportPdf,
   buildInvoiceData, // Export for testing
   buildTableReportData, // Export for testing
+  buildMonthlyRevenueReportData, // Export for testing
 };

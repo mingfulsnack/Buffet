@@ -17,4 +17,11 @@ router.get(
   invoicePdfController.createTableReportPdf
 );
 
+// Create monthly revenue report PDF - requires authentication
+router.get(
+  '/monthly-revenue',
+  authenticateToken,
+  invoicePdfController.createMonthlyRevenueReportPdf
+);
+
 module.exports = router;
