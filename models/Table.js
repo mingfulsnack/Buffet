@@ -31,12 +31,12 @@ class Table extends BaseModel {
           -- Bàn bị khóa hoặc bảo trì (ưu tiên cao nhất)
           WHEN b.trangthai IN ('Lock', 'BaoTri') THEN b.trangthai
           
-          -- Đang được sử dụng: có booking DaXacNhan và thời gian hiện tại nằm trong khoảng đặt bàn
+          -- Đang được sử dụng: có booking DaXacNhan trong khoảng thời gian hoạt động (30 phút trước đến 2 giờ sau giờ đặt)
           WHEN EXISTS (
             SELECT 1 FROM phieudatban p 
             WHERE p.maban = b.maban 
               AND p.trangthai = 'DaXacNhan'
-              AND NOW() >= p.thoigian_dat
+              AND NOW() >= p.thoigian_dat - INTERVAL '30 minutes'
               AND NOW() < p.thoigian_dat + INTERVAL '2 hours'
           ) THEN 'DangSuDung'
           
