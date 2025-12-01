@@ -139,6 +139,13 @@ const InvoicesPage = () => {
     setShowUpdateModal(true);
   };
 
+  const parseCurrencyToNumber = (currencyString) => {
+    if (typeof currencyString === 'number') return currencyString;
+    if (!currencyString) return 0;
+    // Remove currency symbol, dots, commas and convert to number
+    return parseFloat(currencyString.toString().replace(/[^\d.-]/g, '')) || 0;
+  };
+
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setInvoiceForm((prev) => ({
@@ -277,9 +284,11 @@ const InvoicesPage = () => {
   };
 
   const calculateFinalAmount = (invoice) => {
-    let finalAmount = invoice.tongtien || 0;
-    if (invoice.giamgia) finalAmount -= invoice.giamgia;
-    if (invoice.phiphuthu) finalAmount += invoice.phiphuthu;
+    const baseAmount = parseFloat(invoice.tongtien) || 0;
+    const discount = parseFloat(invoice.giamgia) || 0;
+    const surcharge = parseFloat(invoice.phiphuthu) || 0;
+
+    const finalAmount = baseAmount - discount + surcharge;
     return Math.max(0, finalAmount);
   };
 
@@ -444,11 +453,11 @@ const InvoicesPage = () => {
               </p>
               <p>
                 <strong>Giảm giá:</strong> -
-                {formatCurrency(invoiceForm.giamgia || 0)}
+                {formatCurrency(parseFloat(invoiceForm.giamgia) || 0)}
               </p>
               <p>
                 <strong>Phí phụ thu:</strong> +
-                {formatCurrency(invoiceForm.phiphuthu || 0)}
+                {formatCurrency(parseFloat(invoiceForm.phiphuthu) || 0)}
               </p>
               <hr />
               <p className="final-total">
@@ -456,7 +465,7 @@ const InvoicesPage = () => {
                 {formatCurrency(
                   Math.max(
                     0,
-                    (editingInvoice.tongtien || 0) -
+                    parseFloat(editingInvoice.tongtien || 0) -
                       (parseFloat(invoiceForm.giamgia) || 0) +
                       (parseFloat(invoiceForm.phiphuthu) || 0)
                   )
