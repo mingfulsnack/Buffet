@@ -404,7 +404,7 @@ class Booking extends BaseModel {
 
       if (parseInt(otherActiveBookings.rows[0].count) === 0) {
         await client.query(
-          'UPDATE ban SET trangthai = $1, updated_at = NOW() WHERE maban = $2',
+          'UPDATE ban SET trangthai = $1 WHERE maban = $2',
           ['Trong', bookingInfo.maban]
         );
       }
