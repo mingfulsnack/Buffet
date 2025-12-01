@@ -55,7 +55,7 @@ const schemas = {
     maban: Joi.number().integer().positive().required(),
     songuoi: Joi.number().integer().min(1).max(20).required(),
     thoigian_dat: Joi.date().iso().required(),
-    ghichu: Joi.string(),
+    ghichu: Joi.string().allow('', null).optional(),
   }).or('makh', 'guest_hoten'), // Phải có ít nhất một trong hai
 
   // Bàn

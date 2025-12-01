@@ -26,30 +26,34 @@ class Table extends BaseModel {
         b.*,
         v.tenvung, 
         v.mota as vung_mota,
-        -- Ưu tiên trạng thái tĩnh từ DB, sau đó mới tính động
+        -- Tính trạng thái động theo thời gian thực
         CASE 
-          -- Nếu admin đã set trạng thái thủ công, dùng trạng thái đó
-          WHEN b.trangthai IN ('DangSuDung', 'DaDat', 'Lock', 'BaoTri') THEN b.trangthai
+          -- Bàn bị khóa hoặc bảo trì (ưu tiên cao nhất)
+          WHEN b.trangthai IN ('Lock', 'BaoTri') THEN b.trangthai
           
-          -- Nếu trạng thái là Trong, kiểm tra có booking không
+          -- Đang được sử dụng: có booking DaXacNhan và thời gian hiện tại nằm trong khoảng đặt bàn
           WHEN EXISTS (
             SELECT 1 FROM phieudatban p 
             WHERE p.maban = b.maban 
-              AND p.trangthai = 'DangSuDung'
+              AND p.trangthai = 'DaXacNhan'
+              AND NOW() >= p.thoigian_dat
+              AND NOW() < p.thoigian_dat + INTERVAL '2 hours'
           ) THEN 'DangSuDung'
           
+          -- Đang đặt: có booking DaDat và thời gian hiện tại gần đến giờ đặt (30 phút trước đến 2 giờ sau)
           WHEN EXISTS (
             SELECT 1 FROM phieudatban p 
             WHERE p.maban = b.maban 
-              AND p.trangthai IN ('DaXacNhan', 'DaDat')
-              AND p.thoigian_dat BETWEEN NOW() - INTERVAL '30 minutes' AND NOW() + INTERVAL '2 hours'
+              AND p.trangthai = 'DaDat'
+              AND NOW() >= p.thoigian_dat - INTERVAL '30 minutes'
+              AND NOW() < p.thoigian_dat + INTERVAL '2 hours'
           ) THEN 'DaDat'
           
           -- Mặc định là trống
           ELSE 'Trong'
         END as trangthai_thuc_te,
         
-        -- Lấy thông tin đặt bàn gần nhất (nếu có)
+        -- Lấy thông tin đặt bàn hiện tại hoặc sắp tới (nếu có)
         (
           SELECT json_build_object(
             'maphieu', p.maphieu,
@@ -60,8 +64,8 @@ class Table extends BaseModel {
           )
           FROM phieudatban p 
           WHERE p.maban = b.maban 
-            AND p.trangthai IN ('DaXacNhan', 'DaDat', 'DangSuDung')
-            AND p.thoigian_dat >= NOW() - INTERVAL '4 hours'
+            AND p.trangthai IN ('DaXacNhan', 'DaDat')
+            AND p.thoigian_dat + INTERVAL '2 hours' >= NOW()
           ORDER BY p.thoigian_dat ASC
           LIMIT 1
         ) as dat_ban_hien_tai
@@ -166,29 +170,42 @@ class Table extends BaseModel {
         );
       }
 
-      // Xử lý logic chuyển trạng thái
-      if (currentTable.trangthai === 'DaDat' && trangthai === 'DangSuDung') {
-        // Khách đã đến, bắt đầu sử dụng
-        await client.query(
-          'UPDATE phieudatban SET trangthai = $1, thoigian_den = NOW() WHERE maban = $2 AND trangthai IN ($3, $4)',
-          ['DangSuDung', id, 'DaDat', 'DaXacNhan']
+      // Không cho phép thay đổi thủ công sang DaDat hoặc DangSuDung
+      // Những trạng thái này được quản lý tự động bởi hệ thống booking
+      if (['DaDat', 'DangSuDung'].includes(trangthai)) {
+        throw new Error(
+          'Không thể thay đổi trạng thái bàn thành "Đang đặt" hoặc "Đang sử dụng" thủ công. Trạng thái này được quản lý tự động bởi hệ thống đặt bàn.'
         );
-      } else if (
-        currentTable.trangthai === 'DangSuDung' &&
-        trangthai === 'Trong'
-      ) {
-        // Kết thúc sử dụng
-        await client.query(
-          'UPDATE phieudatban SET trangthai = $1 WHERE maban = $2 AND trangthai = $3',
-          ['HoanThanh', id, 'DangSuDung']
+      }
+
+      // Chỉ cho phép chuyển sang: Trong, Lock, BaoTri
+      if (!['Trong', 'Lock', 'BaoTri'].includes(trangthai)) {
+        throw new Error('Trạng thái không hợp lệ');
+      }
+
+      // Nếu chuyển sang Trong, kiểm tra có booking đang hoạt động không
+      if (trangthai === 'Trong') {
+        const activeBooking = await client.query(
+          `SELECT * FROM phieudatban 
+           WHERE maban = $1 
+           AND trangthai IN ('DaDat', 'DaXacNhan')
+           AND NOW() >= thoigian_dat - INTERVAL '30 minutes'
+           AND NOW() < thoigian_dat + INTERVAL '2 hours'`,
+          [id]
         );
+
+        if (activeBooking.rows.length > 0) {
+          throw new Error(
+            'Không thể đặt trạng thái "Trống" khi bàn đang có đặt chỗ hoạt động. Vui lòng hủy đặt chỗ trước.'
+          );
+        }
       }
 
       // Cập nhật trạng thái bàn
       const result = await client.query(
         `
         UPDATE ban 
-        SET trangthai = $1, version = version + 1
+        SET trangthai = $1, version = version + 1, updated_at = NOW()
         WHERE maban = $2
         RETURNING *
       `,

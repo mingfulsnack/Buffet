@@ -22,11 +22,11 @@ const TablesPage = () => {
     trangthai: '',
   });
 
-  // Danh sách trạng thái bàn
+  // Danh sách trạng thái bàn (chỉ những trạng thái có thể thay đổi thủ công)
   const tableStatuses = [
     { value: 'Trong', label: 'Trống' },
-    { value: 'DaDat', label: 'Đang đặt trước' },
-    { value: 'DangSuDung', label: 'Đang được sử dụng' },
+    { value: 'Lock', label: 'Khóa' },
+    { value: 'BaoTri', label: 'Bảo trì' },
   ];
 
   // Mapping trạng thái từ backend sang hiển thị

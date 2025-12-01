@@ -309,13 +309,19 @@ class Booking extends BaseModel {
 
       const bookingInfo = booking.rows[0];
 
+      // Cập nhật trạng thái booking thành DaXacNhan
+      await client.query(
+        `UPDATE ${this.tableName} SET trangthai = $1, updated_at = NOW() WHERE maphieu = $2`,
+        ['DaXacNhan', id]
+      );
+
       // Cập nhật trạng thái bàn thành đang sử dụng
       await client.query('UPDATE ban SET trangthai = $1 WHERE maban = $2', [
         'DangSuDung',
         bookingInfo.maban,
       ]);
 
-      // Ghi log cuối cùng
+      // Ghi log xác nhận
       await client.query(
         `
         INSERT INTO phieudatban_lichsu (maphieu, hanh_dong, noidung, thuchienboi)
@@ -323,11 +329,6 @@ class Booking extends BaseModel {
       `,
         [id, manv]
       );
-
-      // XÓA booking khỏi database - cascade sẽ tự động xóa lịch sử
-      await client.query(`DELETE FROM ${this.tableName} WHERE maphieu = $1`, [
-        id,
-      ]);
 
       return true;
     });
@@ -374,13 +375,7 @@ class Booking extends BaseModel {
         throw new Error('Đã quá thời hạn hủy đặt bàn');
       }
 
-      // Cập nhật trạng thái bàn về trống
-      await client.query('UPDATE ban SET trangthai = $1 WHERE maban = $2', [
-        'Trong',
-        bookingInfo.maban,
-      ]);
-
-      // Ghi log trước khi xóa
+      // Ghi log trước khi hủy
       await client.query(
         `
         INSERT INTO phieudatban_lichsu (maphieu, hanh_dong, noidung, thuchienboi)
@@ -389,11 +384,30 @@ class Booking extends BaseModel {
         [bookingInfo.maphieu, reason || 'Hủy đặt bàn', manv]
       );
 
-      // Đánh dấu thời gian hủy và đặt lịch xóa sau 30 phút
+      // Cập nhật trạng thái booking thành DaHuy
       await client.query(
         `UPDATE ${this.tableName} SET trangthai = $1, thoigian_huy = NOW(), auto_delete_at = NOW() + INTERVAL '30 minutes', updated_at = NOW() WHERE maphieu = $2`,
         ['DaHuy', bookingInfo.maphieu]
       );
+
+      // Cập nhật trạng thái bàn về Trong (trạng thái sẽ tự động tính lại khi load)
+      // Chỉ cập nhật nếu không có booking khác đang hoạt động cho bàn này
+      const otherActiveBookings = await client.query(
+        `SELECT COUNT(*) as count FROM ${this.tableName}
+         WHERE maban = $1 
+         AND maphieu != $2
+         AND trangthai IN ('DaDat', 'DaXacNhan')
+         AND NOW() >= thoigian_dat - INTERVAL '30 minutes'
+         AND NOW() < thoigian_dat + INTERVAL '2 hours'`,
+        [bookingInfo.maban, bookingInfo.maphieu]
+      );
+
+      if (parseInt(otherActiveBookings.rows[0].count) === 0) {
+        await client.query(
+          'UPDATE ban SET trangthai = $1, updated_at = NOW() WHERE maban = $2',
+          ['Trong', bookingInfo.maban]
+        );
+      }
 
       return true;
     });
