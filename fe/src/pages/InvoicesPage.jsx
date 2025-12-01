@@ -139,13 +139,6 @@ const InvoicesPage = () => {
     setShowUpdateModal(true);
   };
 
-  const parseCurrencyToNumber = (currencyString) => {
-    if (typeof currencyString === 'number') return currencyString;
-    if (!currencyString) return 0;
-    // Remove currency symbol, dots, commas and convert to number
-    return parseFloat(currencyString.toString().replace(/[^\d.-]/g, '')) || 0;
-  };
-
   const handleFormChange = (e) => {
     const { name, value } = e.target;
     setInvoiceForm((prev) => ({
