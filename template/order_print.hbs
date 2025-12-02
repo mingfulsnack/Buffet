@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đơn Hàng #{{orderNumber}}</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2c3e50;
+        }
+
+        .header h1 {
+            color: #2c3e50;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #7f8c8d;
+            font-size: 13px;
+            margin: 5px 0;
+        }
+
+        .order-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+
+        .info-section {
+            flex: 1;
+        }
+
+        .info-section h3 {
+            color: #2c3e50;
+            font-size: 16px;
+            margin-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+
+        .info-row {
+            margin: 8px 0;
+            display: flex;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #555;
+            min-width: 120px;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .items-section {
+            margin-bottom: 30px;
+        }
+
+        .items-section h2 {
+            color: #2c3e50;
+            font-size: 18px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #3498db;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        thead {
+            background: #2c3e50;
+            color: white;
+        }
+
+        th {
+            padding: 12px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        th:first-child {
+            text-align: center;
+            width: 60px;
+        }
+
+        th:last-child {
+            text-align: center;
+            width: 100px;
+        }
+
+        tbody tr {
+            border-bottom: 1px solid #ddd;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        tbody tr:hover {
+            background: #e8f4f8;
+        }
+
+        td {
+            padding: 10px 12px;
+        }
+
+        td:first-child {
+            text-align: center;
+            color: #7f8c8d;
+            font-weight: bold;
+        }
+
+        td:last-child {
+            text-align: center;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .notes-section {
+            margin-top: 30px;
+            padding: 15px;
+            background: #fff9e6;
+            border-left: 4px solid #f39c12;
+            border-radius: 5px;
+        }
+
+        .notes-section h3 {
+            color: #f39c12;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .notes-content {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #ddd;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 12px;
+        }
+
+        .footer p {
+            margin: 5px 0;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+            }
+
+            .container {
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>NHÀ HÀNG BAM BAM BUFFET</h1>
+            <p>Địa chỉ: Số 20-21 Lô 8 Khu Liền Kề, Ng.67 Đ. Phùng Khoang, Hà Nội</p>
+            <p>Điện thoại: 0817 929 222</p>
+        </div>
+
+        <!-- Order Info -->
+        <div class="order-info">
+            <div class="info-section">
+                <h3>Thông Tin Đơn Hàng</h3>
+                <div class="info-row">
+                    <span class="info-label">Mã đơn hàng:</span>
+                    <span class="info-value">{{orderNumber}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Ngày lập:</span>
+                    <span class="info-value">{{ngay_lap}}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Thời gian:</span>
+                    <span class="info-value">{{thoi_gian}}</span>
+                </div>
+            </div>
+            <div class="info-section">
+                <h3>Thông Tin Bàn</h3>
+                <div class="info-row">
+                    <span class="info-label">Bàn số:</span>
+                    <span class="info-value">{{so_ban}}</span>
+                </div>
+                {{#if khu_vuc}}
+                <div class="info-row">
+                    <span class="info-label">Khu vực:</span>
+                    <span class="info-value">{{khu_vuc}}</span>
+                </div>
+                {{/if}}
+            </div>
+        </div>
+
+        <!-- Items Table -->
+        <div class="items-section">
+            <h2>📋 Chi Tiết Món Ăn</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>STT</th>
+                        <th>Tên Món</th>
+                        <th>Số Lượng</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{#each items}}
+                    <tr>
+                        <td>{{this.index}}</td>
+                        <td>{{this.ten_mon}}</td>
+                        <td>{{this.quantity}}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Notes Section -->
+        {{#if ghichu}}
+        <div class="notes-section">
+            <h3>📝 Ghi Chú</h3>
+            <div class="notes-content">{{ghichu}}</div>
+        </div>
+        {{/if}}
+
+        <!-- Footer -->
+        <div class="footer">
+            <p><strong>Cảm ơn quý khách!</strong></p>
+            <p>In lúc: {{ngay_lap}} {{thoi_gian}}</p>
+        </div>
+    </div>
+</body>
+
+</html>

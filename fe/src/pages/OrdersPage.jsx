@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './OrdersPage.scss';
-import { FaPlus, FaEdit, FaTrash, FaCheck, FaMinus } from 'react-icons/fa';
+import {
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaCheck,
+  FaMinus,
+  FaPrint,
+} from 'react-icons/fa';
 import Modal from '../components/Modal';
 import {
   showError,
@@ -274,6 +281,37 @@ const OrdersPage = () => {
     }
   };
 
+  const handlePrintOrder = async (orderId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `http://localhost:3000/api/pdf/order/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Không thể tạo đơn hàng PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Order_${orderId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error:', error);
+      showError('Lỗi khi in đơn hàng');
+    }
+  };
+
   const addItemToOrder = (item) => {
     // Đảm bảo item có đầy đủ thuộc tính cần thiết
     const normalizedItem = {
@@ -516,6 +554,18 @@ const OrdersPage = () => {
                           </button>
                         </>
                       )}
+                      {order.da_xac_nhan && (
+                        <>
+                          <button
+                            className="btn btn-sm btn-info"
+                            onClick={() => handlePrintOrder(order.madon)}
+                            title="In đơn hàng"
+                          >
+                            <FaPrint />
+                          </button>
+                          <span className="confirmed-badge">Đã xác nhận</span>
+                        </>
+                      )}
                       <button
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDeleteOrder(order.madon)}
@@ -523,9 +573,6 @@ const OrdersPage = () => {
                       >
                         <FaTrash />
                       </button>
-                      {order.da_xac_nhan && (
-                        <span className="confirmed-badge">Đã xác nhận</span>
-                      )}
                     </div>
                   </td>
                 </tr>

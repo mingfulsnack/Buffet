@@ -18,6 +18,7 @@ const InvoicesPage = () => {
     giamgia: '',
     phiphuthu: '',
     trangthai_thanhtoan: 'Chua thanh toan',
+    hinhthuc_thanhtoan: 'cash',
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -135,6 +136,7 @@ const InvoicesPage = () => {
       giamgia: invoice.giamgia || '',
       phiphuthu: invoice.phiphuthu || '',
       trangthai_thanhtoan: invoice.trangthai_thanhtoan || 'Chua thanh toan',
+      hinhthuc_thanhtoan: invoice.hinhthuc_thanhtoan || 'cash',
     });
     setShowUpdateModal(true);
   };
@@ -169,6 +171,7 @@ const InvoicesPage = () => {
               ? parseFloat(invoiceForm.phiphuthu)
               : null,
             trangthai_thanhtoan: invoiceForm.trangthai_thanhtoan,
+            hinhthuc_thanhtoan: invoiceForm.hinhthuc_thanhtoan,
           }),
         }
       );
@@ -276,6 +279,17 @@ const InvoicesPage = () => {
     }
   };
 
+  const getPaymentMethodText = (method) => {
+    switch (method) {
+      case 'cash':
+        return 'Tiền mặt';
+      case 'bank':
+        return 'Chuyển khoản';
+      default:
+        return method || 'Tiền mặt';
+    }
+  };
+
   const calculateFinalAmount = (invoice) => {
     const baseAmount = parseFloat(invoice.tongtien) || 0;
     const discount = parseFloat(invoice.giamgia) || 0;
@@ -325,6 +339,7 @@ const InvoicesPage = () => {
               <th>Giảm giá</th>
               <th>Phí phụ thu</th>
               <th>Thành tiền</th>
+              <th>Hình thức thanh toán</th>
               <th>Trạng thái thanh toán</th>
               <th>Ngày lập</th>
               <th>Thao tác</th>
@@ -333,7 +348,7 @@ const InvoicesPage = () => {
           <tbody>
             {invoices.length === 0 ? (
               <tr>
-                <td colSpan="9" className="text-center">
+                <td colSpan="10" className="text-center">
                   Chưa có hóa đơn nào
                 </td>
               </tr>
@@ -353,6 +368,7 @@ const InvoicesPage = () => {
                   <td className="final-amount">
                     {formatCurrency(calculateFinalAmount(invoice))}
                   </td>
+                  <td>{getPaymentMethodText(invoice.hinhthuc_thanhtoan)}</td>
                   <td>
                     <span
                       className={`status-badge ${getStatusClassName(
@@ -422,6 +438,19 @@ const InvoicesPage = () => {
               placeholder="Nhập phí phụ thu"
               min="0"
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="hinhthuc_thanhtoan">Hình thức thanh toán</label>
+            <select
+              id="hinhthuc_thanhtoan"
+              name="hinhthuc_thanhtoan"
+              value={invoiceForm.hinhthuc_thanhtoan}
+              onChange={handleFormChange}
+            >
+              <option value="cash">Tiền mặt</option>
+              <option value="bank">Chuyển khoản</option>
+            </select>
           </div>
 
           <div className="form-group">

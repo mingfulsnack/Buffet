@@ -258,13 +258,13 @@ const ReportsPage = () => {
     if (!paymentStats || paymentStats.length === 0) return null;
 
     return {
-      labels: paymentStats.map((item) =>
-        item.payment_status === 'paid'
-          ? 'Đã thanh toán'
-          : item.payment_status === 'pending'
-          ? 'Chờ thanh toán'
-          : 'Hủy'
-      ),
+      labels: paymentStats.map((item) => {
+        const status = item.trangthai_thanhtoan;
+        if (status === 'Da thanh toan') return 'Đã thanh toán';
+        if (status === 'Chua thanh toan' || status === 'ChuaThanhToan') return 'Chưa thanh toán';
+        if (status === 'Da huy') return 'Đã hủy';
+        return status || 'Không xác định';
+      }),
       datasets: [
         {
           data: paymentStats.map((item) => parseInt(item.count)),
@@ -358,7 +358,26 @@ const ReportsPage = () => {
           url = `http://localhost:3000/api/pdf/monthly-revenue?year=${reportForm.year}`;
           filename = `Monthly_Revenue_Report_${reportForm.year}.pdf`;
           break;
-        // Add more report types here in the future
+        case 'daily-revenue-comprehensive':
+          url = `http://localhost:3000/api/pdf/daily-revenue-comprehensive?startDate=${reportForm.startDate}&endDate=${reportForm.endDate}`;
+          filename = `Daily_Revenue_Comprehensive_${reportForm.startDate}_${reportForm.endDate}.pdf`;
+          break;
+        case 'monthly-revenue-invoices':
+          url = `http://localhost:3000/api/pdf/monthly-revenue-invoices?year=${reportForm.year}`;
+          filename = `Monthly_Revenue_With_Invoices_${reportForm.year}.pdf`;
+          break;
+        case 'revenue-by-dish':
+          url = `http://localhost:3000/api/pdf/revenue-by-dish?startDate=${reportForm.startDate}&endDate=${reportForm.endDate}`;
+          filename = `Revenue_By_Dish_${reportForm.startDate}_${reportForm.endDate}.pdf`;
+          break;
+        case 'revenue-by-buffet-set':
+          url = `http://localhost:3000/api/pdf/revenue-by-buffet-set?startDate=${reportForm.startDate}&endDate=${reportForm.endDate}`;
+          filename = `Revenue_By_Buffet_Set_${reportForm.startDate}_${reportForm.endDate}.pdf`;
+          break;
+        case 'booking-report':
+          url = `http://localhost:3000/api/pdf/booking-report?startDate=${reportForm.startDate}&endDate=${reportForm.endDate}`;
+          filename = `Booking_Report_${reportForm.startDate}_${reportForm.endDate}.pdf`;
+          break;
         default:
           throw new Error('Loại báo cáo không được hỗ trợ');
       }
@@ -607,12 +626,29 @@ const ReportsPage = () => {
               onChange={handleReportFormChange}
             >
               <option value="table-performance">Báo cáo hiệu suất bàn</option>
-              <option value="monthly-revenue">Báo cáo doanh thu tháng</option>
-              {/* Add more report types here in the future */}
+              <option value="daily-revenue-comprehensive">
+                Báo cáo doanh thu tổng hợp theo ngày
+              </option>
+              <option value="monthly-revenue-invoices">
+                Báo cáo doanh thu theo tháng
+              </option>
+              <option value="revenue-by-dish">
+                Báo cáo doanh thu theo món ăn
+              </option>
+              <option value="revenue-by-buffet-set">
+                Báo cáo doanh thu theo set buffet
+              </option>
+              <option value="booking-report">
+                Báo cáo booking bàn
+              </option>
             </select>
           </div>
 
-          {reportForm.reportType === 'table-performance' && (
+          {(reportForm.reportType === 'table-performance' ||
+            reportForm.reportType === 'daily-revenue-comprehensive' ||
+            reportForm.reportType === 'revenue-by-dish' ||
+            reportForm.reportType === 'revenue-by-buffet-set' ||
+            reportForm.reportType === 'booking-report') && (
             <>
               <div className="form-group">
                 <label htmlFor="startDate">Từ ngày:</label>
@@ -638,7 +674,8 @@ const ReportsPage = () => {
             </>
           )}
 
-          {reportForm.reportType === 'monthly-revenue' && (
+          {(reportForm.reportType === 'monthly-revenue' ||
+            reportForm.reportType === 'monthly-revenue-invoices') && (
             <div className="form-group">
               <label htmlFor="year">Năm:</label>
               <input
