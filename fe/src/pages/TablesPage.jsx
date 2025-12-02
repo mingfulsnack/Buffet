@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { tableAPI } from '../services/api';
 import Modal from '../components/Modal';
 import Button from '../components/Button';
+import Pagination from '../components/Pagination';
 import { showLoadingToast, showValidationError } from '../utils/toast';
 import './TablesPage.scss';
 
@@ -13,6 +14,8 @@ const TablesPage = () => {
   const [areas, setAreas] = useState([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingTable, setEditingTable] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const [formData, setFormData] = useState({
     tenban: '',
     mavung: '',
@@ -41,6 +44,29 @@ const TablesPage = () => {
       default:
         return { text: table.trangthai || 'Trống', class: 'status-empty' };
     }
+  };
+
+  // Flatten tables from all areas for pagination
+  const allTablesFlattened = tablesByArea.flatMap((area) =>
+    area.tables.map((table) => ({
+      ...table,
+      tenvung: area.tenvung,
+      mavung: area.mavung,
+    }))
+  );
+
+  // Pagination calculation
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentTables = allTablesFlattened.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(allTablesFlattened.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Load danh sách bàn
@@ -297,44 +323,47 @@ const TablesPage = () => {
               </tr>
             </thead>
             <tbody>
-              {tablesByArea.map((area) =>
-                area.tables.map((table, index) => {
-                  const status = getStatusDisplay(table);
-                  return (
-                    <tr key={table.maban || `${area.mavung}-table-${index}`}>
-                      <td className="table-name">
-                        <strong>{table.tenban}</strong>
-                      </td>
-                      <td className="table-area">{area.tenvung}</td>
-                      <td className="table-seats">
-                        <span className="seat-count">{table.soghe}</span>
-                      </td>
-                      <td className="table-status">
-                        <span className={`status-badge ${status.class}`}>
-                          {status.text}
-                        </span>
-                      </td>
-                      <td className="table-notes">{table.ghichu || '-'}</td>
-                      <td className="table-actions">
-                        <div className="action-buttons">
-                          <Button
-                            onClick={() => handleEditTable(table, area)}
-                            variant="edit"
-                          >
-                            Sửa
-                          </Button>
-                          <Button
-                            onClick={() => handleDeleteTable(table)}
-                            variant="delete"
-                          >
-                            Xóa
-                          </Button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
+              {currentTables.map((table, index) => {
+                const status = getStatusDisplay(table);
+                return (
+                  <tr key={table.maban || `table-${index}`}>
+                    <td className="table-name">
+                      <strong>{table.tenban}</strong>
+                    </td>
+                    <td className="table-area">{table.tenvung}</td>
+                    <td className="table-seats">
+                      <span className="seat-count">{table.soghe}</span>
+                    </td>
+                    <td className="table-status">
+                      <span className={`status-badge ${status.class}`}>
+                        {status.text}
+                      </span>
+                    </td>
+                    <td className="table-notes">{table.ghichu || '-'}</td>
+                    <td className="table-actions">
+                      <div className="action-buttons">
+                        <Button
+                          onClick={() =>
+                            handleEditTable(table, {
+                              mavung: table.mavung,
+                              tenvung: table.tenvung,
+                            })
+                          }
+                          variant="edit"
+                        >
+                          Sửa
+                        </Button>
+                        <Button
+                          onClick={() => handleDeleteTable(table)}
+                          variant="delete"
+                        >
+                          Xóa
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 
@@ -344,6 +373,13 @@ const TablesPage = () => {
             </div>
           )}
         </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          itemsPerPage={itemsPerPage}
+          totalItems={allTablesFlattened.length}
+        />
       </div>
 
       {/* Modal thêm/sửa bàn */}

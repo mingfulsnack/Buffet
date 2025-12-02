@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Pagination from '../components/Pagination';
 import { showLoadingToast, showError } from '../utils/toast';
 import './InvoicesPage.scss';
 
@@ -10,6 +11,8 @@ const InvoicesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Modal states
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -299,6 +302,17 @@ const InvoicesPage = () => {
     return Math.max(0, finalAmount);
   };
 
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentInvoices = invoices.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(invoices.length / itemsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   if (loading) {
     return <LoadingSpinner />;
   }
@@ -353,7 +367,7 @@ const InvoicesPage = () => {
                 </td>
               </tr>
             ) : (
-              invoices.map((invoice) => (
+              currentInvoices.map((invoice) => (
                 <tr key={invoice.mahd}>
                   <td className="invoice-id">{invoice.mahd}</td>
                   <td>{formatCurrency(invoice.tongtien)}</td>
@@ -404,6 +418,15 @@ const InvoicesPage = () => {
             )}
           </tbody>
         </table>
+        {invoices.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            itemsPerPage={itemsPerPage}
+            totalItems={invoices.length}
+          />
+        )}
       </div>
 
       {/* Update Modal */}

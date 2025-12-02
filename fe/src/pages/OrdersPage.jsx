@@ -9,6 +9,7 @@ import {
   FaPrint,
 } from 'react-icons/fa';
 import Modal from '../components/Modal';
+import Pagination from '../components/Pagination';
 import {
   showError,
   showLoadingToast,
@@ -28,6 +29,8 @@ const OrdersPage = () => {
   const [tables, setTables] = useState([]);
   const [menuLoading, setMenuLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const fetchOrders = useCallback(async (retryCount = 0) => {
     try {
@@ -474,6 +477,17 @@ const OrdersPage = () => {
     return new Date(dateString).toLocaleString('vi-VN');
   };
 
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentOrders = orders.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(orders.length / itemsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   if (loading) {
     return <div className="loading">Đang tải...</div>;
   }
@@ -510,7 +524,7 @@ const OrdersPage = () => {
                 </td>
               </tr>
             ) : (
-              orders.map((order) => (
+              currentOrders.map((order) => (
                 <tr key={order.madon}>
                   <td>{order.madon}</td>
                   <td>
@@ -580,6 +594,15 @@ const OrdersPage = () => {
             )}
           </tbody>
         </table>
+        {orders.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            itemsPerPage={itemsPerPage}
+            totalItems={orders.length}
+          />
+        )}
       </div>
 
       {/* Order Modal */}

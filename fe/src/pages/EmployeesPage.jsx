@@ -3,10 +3,8 @@ import { employeeAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
-import {
-  showLoadingToast,
-  showValidationError,
-} from '../utils/toast';
+import Pagination from '../components/Pagination';
+import { showLoadingToast, showValidationError } from '../utils/toast';
 import './EmployeesPage.scss';
 
 const EmployeesPage = () => {
@@ -18,6 +16,8 @@ const EmployeesPage = () => {
   const [editingEmployee, setEditingEmployee] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Form state
   const [employeeForm, setEmployeeForm] = useState({
@@ -78,6 +78,25 @@ const EmployeesPage = () => {
 
     return matchesSearch;
   });
+
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentEmployees = filteredEmployees.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredEmployees.length / itemsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Reset to page 1 when search changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
 
   const handleFormChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -304,8 +323,8 @@ const EmployeesPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredEmployees.map((employee) => (
-                <tr key={employee.manv}>
+              {currentEmployees.map((employee) => (
+                <tr key={employee.manhanvien}>
                   <td>{employee.hoten}</td>
                   <td>{employee.sodienthoai || 'N/A'}</td>
                   <td>{employee.email || 'N/A'}</td>
@@ -346,6 +365,13 @@ const EmployeesPage = () => {
             </tbody>
           </table>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredEmployees.length}
+        />
       </div>
 
       {/* Employee Form Modal */}

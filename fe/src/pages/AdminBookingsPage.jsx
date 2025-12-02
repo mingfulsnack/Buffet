@@ -3,10 +3,8 @@ import { bookingAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
-import {
-  showLoadingToast,
-  showValidationError,
-} from '../utils/toast';
+import Pagination from '../components/Pagination';
+import { showLoadingToast, showValidationError } from '../utils/toast';
 import './AdminBookingsPage.scss';
 
 const AdminBookingsPage = () => {
@@ -18,6 +16,8 @@ const AdminBookingsPage = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Prevent multiple API calls
   const hasLoadedData = useRef(false);
@@ -60,6 +60,25 @@ const AdminBookingsPage = () => {
 
     return matchesSearch && matchesStatus;
   });
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
+  // Pagination calculation
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentBookings = filteredBookings.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleCancelBooking = async () => {
     if (!selectedBooking || !cancelReason.trim()) return;
@@ -205,7 +224,7 @@ const AdminBookingsPage = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredBookings.map((booking) => (
+              {currentBookings.map((booking) => (
                 <tr key={booking.maphieu}>
                   <td>{booking.maphieu}</td>
                   <td>
@@ -265,6 +284,13 @@ const AdminBookingsPage = () => {
             </tbody>
           </table>
         )}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          itemsPerPage={itemsPerPage}
+          totalItems={filteredBookings.length}
+        />
       </div>
 
       {/* Cancel Booking Modal */}
