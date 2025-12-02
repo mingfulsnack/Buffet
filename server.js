@@ -265,7 +265,6 @@ cron.schedule(
 cron.schedule(
   '*/10 * * * *',
   async () => {
-    console.log('🗑️ Cleaning up cancelled bookings...');
     await BookingCleanupService.cleanupCancelledBookings();
   },
   {
