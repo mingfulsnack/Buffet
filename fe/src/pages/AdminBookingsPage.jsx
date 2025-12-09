@@ -210,87 +210,89 @@ const AdminBookingsPage = () => {
             <p>Không có đặt bàn nào được tìm thấy</p>
           </div>
         ) : (
-          <table className="bookings-table">
-            <thead>
-              <tr>
-                <th>Mã phiếu</th>
-                <th>Tên khách</th>
-                <th>Số điện thoại</th>
-                <th>Bàn</th>
-                <th>Số người</th>
-                <th>Thời gian đặt</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {currentBookings.map((booking) => (
-                <tr key={booking.maphieu}>
-                  <td>{booking.maphieu}</td>
-                  <td>
-                    {booking.guest_hoten || booking.khachhang_hoten || 'N/A'}
-                  </td>
-                  <td>
-                    {booking.guest_sodienthoai ||
-                      booking.khachhang_sodienthoai ||
-                      'N/A'}
-                  </td>
-                  <td>{booking.tenban}</td>
-                  <td>{booking.songuoi}</td>
-                  <td>{formatDateTime(booking.thoigian_dat)}</td>
-                  <td>
-                    <span
-                      className={`status-badge ${getStatusColor(
-                        booking.trangthai
-                      )}`}
-                    >
-                      {getStatusText(booking.trangthai)}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      {booking.trangthai === 'DaDat' && (
-                        <>
-                          <Button
-                            variant="edit"
-                            size="small"
-                            onClick={() =>
-                              handleConfirmBooking(booking.maphieu)
-                            }
-                          >
-                            Xác nhận
-                          </Button>
-                          <Button
-                            variant="delete"
-                            size="small"
-                            onClick={() => {
-                              setSelectedBooking(booking);
-                              setShowCancelModal(true);
-                            }}
-                          >
-                            Hủy
-                          </Button>
-                        </>
-                      )}
-                      {(booking.trangthai === 'DaXacNhan' ||
-                        booking.trangthai === 'DaHuy' ||
-                        booking.trangthai === 'QuaHan') && (
-                        <span className="no-actions">Không có thao tác</span>
-                      )}
-                    </div>
-                  </td>
+          <>
+            <table className="bookings-table">
+              <thead>
+                <tr>
+                  <th>Mã phiếu</th>
+                  <th>Tên khách</th>
+                  <th>Số điện thoại</th>
+                  <th>Bàn</th>
+                  <th>Số người</th>
+                  <th>Thời gian đặt</th>
+                  <th>Trạng thái</th>
+                  <th>Thao tác</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {currentBookings.map((booking) => (
+                  <tr key={booking.maphieu}>
+                    <td>{booking.maphieu}</td>
+                    <td>
+                      {booking.guest_hoten || booking.khachhang_hoten || 'N/A'}
+                    </td>
+                    <td>
+                      {booking.guest_sodienthoai ||
+                        booking.khachhang_sodienthoai ||
+                        'N/A'}
+                    </td>
+                    <td>{booking.tenban}</td>
+                    <td>{booking.songuoi}</td>
+                    <td>{formatDateTime(booking.thoigian_dat)}</td>
+                    <td>
+                      <span
+                        className={`status-badge ${getStatusColor(
+                          booking.trangthai
+                        )}`}
+                      >
+                        {getStatusText(booking.trangthai)}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        {booking.trangthai === 'DaDat' && (
+                          <>
+                            <Button
+                              variant="edit"
+                              size="small"
+                              onClick={() =>
+                                handleConfirmBooking(booking.maphieu)
+                              }
+                            >
+                              Xác nhận
+                            </Button>
+                            <Button
+                              variant="delete"
+                              size="small"
+                              onClick={() => {
+                                setSelectedBooking(booking);
+                                setShowCancelModal(true);
+                              }}
+                            >
+                              Hủy
+                            </Button>
+                          </>
+                        )}
+                        {(booking.trangthai === 'DaXacNhan' ||
+                          booking.trangthai === 'DaHuy' ||
+                          booking.trangthai === 'QuaHan') && (
+                          <span className="no-actions">Không có thao tác</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              itemsPerPage={itemsPerPage}
+              totalItems={filteredBookings.length}
+            />
+          </>
         )}
-        <Pagination
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={handlePageChange}
-          itemsPerPage={itemsPerPage}
-          totalItems={filteredBookings.length}
-        />
       </div>
 
       {/* Cancel Booking Modal */}
