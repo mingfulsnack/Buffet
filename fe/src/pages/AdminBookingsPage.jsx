@@ -75,6 +75,14 @@ const AdminBookingsPage = () => {
   );
   const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
 
+  console.log('Pagination debug:', {
+    totalBookings: filteredBookings.length,
+    itemsPerPage,
+    totalPages,
+    currentPage,
+    currentBookings: currentBookings.length,
+  });
+
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
     window.scrollTo({ top: 0, behavior: 'smooth' });
