@@ -31,7 +31,7 @@ const AdminBookingsPage = () => {
 
       try {
         console.log('Loading bookings...');
-        const response = await bookingAPI.getBookings();
+        const response = await bookingAPI.getBookings({ limit: 1000 });
 
         if (response.data.success) {
           setBookings(response.data.data);
@@ -74,14 +74,6 @@ const AdminBookingsPage = () => {
     indexOfLastItem
   );
   const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
-
-  console.log('Pagination debug:', {
-    totalBookings: filteredBookings.length,
-    itemsPerPage,
-    totalPages,
-    currentPage,
-    currentBookings: currentBookings.length,
-  });
 
   const handlePageChange = (pageNumber) => {
     setCurrentPage(pageNumber);
