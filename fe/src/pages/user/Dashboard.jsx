@@ -108,7 +108,7 @@ const Dashboard = () => {
               <FaPhone />
               <div>
                 <h4>Hotline</h4>
-                <p>1900 1234</p>
+                <p>081 792 9222</p>
               </div>
             </div>
             <div className="contact-item">
@@ -122,7 +122,7 @@ const Dashboard = () => {
               <FaMapMarkerAlt />
               <div>
                 <h4>Địa chỉ</h4>
-                <p>123 Đường ABC, Quận XYZ, TP.HCM</p>
+                <p>Số 20-21 Lô 8 Khu Liền Kề, Ng.67 Đ. Phùng Khoang, Hà Nội</p>
               </div>
             </div>
           </div>
