@@ -49,14 +49,14 @@ class BookingCleanupService {
 
       // Booking được coi là quá hạn nếu:
       // - Trạng thái vẫn là DaDat
-      // - Thời gian đặt + 2 giờ < thời gian hiện tại (cho khách 2h để đến)
+      // - Thời gian đặt + 10 phút < thời gian hiện tại (cho khách 10 phút để đến)
       const result = await Booking.query(
         `
         UPDATE phieudatban 
         SET trangthai = 'QuaHan',
             updated_at = CURRENT_TIMESTAMP
         WHERE trangthai = 'DaDat' 
-        AND thoigian_dat + INTERVAL '2 hours' < $1
+        AND thoigian_dat + INTERVAL '10 minutes' < $1
         RETURNING maphieu, thoigian_dat, guest_hoten
       `,
         [now]
