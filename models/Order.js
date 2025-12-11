@@ -12,8 +12,6 @@ class Order extends BaseModel {
   // Tạo đơn hàng mới
   static async createOrder(orderData) {
     const { monAn = [], ghichu = '', maban = null } = orderData;
-    console.log('Order.createOrder received data:', { monAn, ghichu, maban }); // Debug log
-
     const baseModel = new BaseModel('donhang');
 
     return await baseModel.transaction(async (client) => {
@@ -325,11 +323,12 @@ class Order extends BaseModel {
       const tongtien = totalResult.rows[0].tongtien || order.tongtien || 0;
 
       // Tạo hóa đơn nhưng không xóa đơn hàng
+      // Set default payment status to the normalized string expected by the frontend
       const invoiceResult = await client.query(
-        `INSERT INTO hoadon (madon, tongtien, giamgia, phiphuthu, ngaylap) 
-         VALUES ($1, $2, NULL, NULL, NOW()) 
+        `INSERT INTO hoadon (madon, tongtien, giamgia, phiphuthu, ngaylap, trangthai_thanhtoan) 
+         VALUES ($1, $2, NULL, NULL, NOW(), $3) 
          RETURNING *`,
-        [madon, tongtien]
+        [madon, tongtien, 'Chua thanh toan']
       );
 
       const invoice = invoiceResult.rows[0];

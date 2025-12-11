@@ -78,7 +78,8 @@ const updatePaymentStatus = async (req, res) => {
 const updateInvoice = async (req, res) => {
   try {
     const { id } = req.params;
-    const { giamgia, phiphuthu, trangthai_thanhtoan } = req.body;
+    const { giamgia, phiphuthu, trangthai_thanhtoan, hinhthuc_thanhtoan } =
+      req.body;
 
     // Validate dữ liệu
     if (giamgia && (isNaN(giamgia) || giamgia < 0)) {
@@ -91,10 +92,18 @@ const updateInvoice = async (req, res) => {
         .json(formatErrorResponse('Phí phụ thu không hợp lệ'));
     }
 
+    // Validate hinhthuc_thanhtoan
+    if (hinhthuc_thanhtoan && !['cash', 'bank'].includes(hinhthuc_thanhtoan)) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Hình thức thanh toán không hợp lệ'));
+    }
+
     const invoiceData = {
       giamgia: giamgia || null,
       phiphuthu: phiphuthu || null,
       trangthai_thanhtoan: trangthai_thanhtoan || 'Chua thanh toan',
+      hinhthuc_thanhtoan: hinhthuc_thanhtoan || 'cash',
     };
 
     const invoice = await Invoice.updateInvoice(id, invoiceData);

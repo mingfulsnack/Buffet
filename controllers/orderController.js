@@ -108,8 +108,6 @@ const createOrder = async (req, res) => {
   try {
     const { monAn, ghichu, maban } = req.body;
 
-    console.log('Received order data:', { monAn, ghichu, maban }); // Debug log
-
     if (!monAn || !Array.isArray(monAn) || monAn.length === 0) {
       return res
         .status(400)

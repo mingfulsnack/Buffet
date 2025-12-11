@@ -3,10 +3,8 @@ import { bookingAPI } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
-import {
-  showLoadingToast,
-  showValidationError,
-} from '../utils/toast';
+import Pagination from '../components/Pagination';
+import { showLoadingToast, showValidationError } from '../utils/toast';
 import './AdminBookingsPage.scss';
 
 const AdminBookingsPage = () => {
@@ -18,6 +16,8 @@ const AdminBookingsPage = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Prevent multiple API calls
   const hasLoadedData = useRef(false);
@@ -31,7 +31,7 @@ const AdminBookingsPage = () => {
 
       try {
         console.log('Loading bookings...');
-        const response = await bookingAPI.getBookings();
+        const response = await bookingAPI.getBookings({ limit: 1000 });
 
         if (response.data.success) {
           setBookings(response.data.data);
@@ -60,6 +60,25 @@ const AdminBookingsPage = () => {
 
     return matchesSearch && matchesStatus;
   });
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
+  // Pagination calculation
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentBookings = filteredBookings.slice(
+    indexOfFirstItem,
+    indexOfLastItem
+  );
+  const totalPages = Math.ceil(filteredBookings.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const handleCancelBooking = async () => {
     if (!selectedBooking || !cancelReason.trim()) return;
@@ -191,79 +210,88 @@ const AdminBookingsPage = () => {
             <p>Không có đặt bàn nào được tìm thấy</p>
           </div>
         ) : (
-          <table className="bookings-table">
-            <thead>
-              <tr>
-                <th>Mã phiếu</th>
-                <th>Tên khách</th>
-                <th>Số điện thoại</th>
-                <th>Bàn</th>
-                <th>Số người</th>
-                <th>Thời gian đặt</th>
-                <th>Trạng thái</th>
-                <th>Thao tác</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredBookings.map((booking) => (
-                <tr key={booking.maphieu}>
-                  <td>{booking.maphieu}</td>
-                  <td>
-                    {booking.guest_hoten || booking.khachhang_hoten || 'N/A'}
-                  </td>
-                  <td>
-                    {booking.guest_sodienthoai ||
-                      booking.khachhang_sodienthoai ||
-                      'N/A'}
-                  </td>
-                  <td>{booking.tenban}</td>
-                  <td>{booking.songuoi}</td>
-                  <td>{formatDateTime(booking.thoigian_dat)}</td>
-                  <td>
-                    <span
-                      className={`status-badge ${getStatusColor(
-                        booking.trangthai
-                      )}`}
-                    >
-                      {getStatusText(booking.trangthai)}
-                    </span>
-                  </td>
-                  <td>
-                    <div className="action-buttons">
-                      {booking.trangthai === 'DaDat' && (
-                        <>
-                          <Button
-                            variant="edit"
-                            size="small"
-                            onClick={() =>
-                              handleConfirmBooking(booking.maphieu)
-                            }
-                          >
-                            Xác nhận
-                          </Button>
-                          <Button
-                            variant="delete"
-                            size="small"
-                            onClick={() => {
-                              setSelectedBooking(booking);
-                              setShowCancelModal(true);
-                            }}
-                          >
-                            Hủy
-                          </Button>
-                        </>
-                      )}
-                      {(booking.trangthai === 'DaXacNhan' ||
-                        booking.trangthai === 'DaHuy' ||
-                        booking.trangthai === 'QuaHan') && (
-                        <span className="no-actions">Không có thao tác</span>
-                      )}
-                    </div>
-                  </td>
+          <>
+            <table className="bookings-table">
+              <thead>
+                <tr>
+                  <th>Mã phiếu</th>
+                  <th>Tên khách</th>
+                  <th>Số điện thoại</th>
+                  <th>Bàn</th>
+                  <th>Số người</th>
+                  <th>Thời gian đặt</th>
+                  <th>Trạng thái</th>
+                  <th>Thao tác</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {currentBookings.map((booking) => (
+                  <tr key={booking.maphieu}>
+                    <td>{booking.maphieu}</td>
+                    <td>
+                      {booking.guest_hoten || booking.khachhang_hoten || 'N/A'}
+                    </td>
+                    <td>
+                      {booking.guest_sodienthoai ||
+                        booking.khachhang_sodienthoai ||
+                        'N/A'}
+                    </td>
+                    <td>{booking.tenban}</td>
+                    <td>{booking.songuoi}</td>
+                    <td>{formatDateTime(booking.thoigian_dat)}</td>
+                    <td>
+                      <span
+                        className={`status-badge ${getStatusColor(
+                          booking.trangthai
+                        )}`}
+                      >
+                        {getStatusText(booking.trangthai)}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="action-buttons">
+                        {booking.trangthai === 'DaDat' && (
+                          <>
+                            <Button
+                              variant="edit"
+                              size="small"
+                              onClick={() =>
+                                handleConfirmBooking(booking.maphieu)
+                              }
+                            >
+                              Xác nhận
+                            </Button>
+                            <Button
+                              variant="delete"
+                              size="small"
+                              onClick={() => {
+                                setSelectedBooking(booking);
+                                setShowCancelModal(true);
+                              }}
+                            >
+                              Hủy
+                            </Button>
+                          </>
+                        )}
+                        {(booking.trangthai === 'DaXacNhan' ||
+                          booking.trangthai === 'DaHuy' ||
+                          booking.trangthai === 'QuaHan') && (
+                          <span className="no-actions">Không có thao tác</span>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              itemsPerPage={itemsPerPage}
+              totalItems={filteredBookings.length}
+            />
+          </>
         )}
       </div>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Button from '../components/Button';
 import Modal from '../components/Modal';
 import LoadingSpinner from '../components/LoadingSpinner';
+import Pagination from '../components/Pagination';
 import { showLoadingToast, showError } from '../utils/toast';
 import './InvoicesPage.scss';
 
@@ -10,6 +11,8 @@ const InvoicesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [stats, setStats] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   // Modal states
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -18,6 +21,7 @@ const InvoicesPage = () => {
     giamgia: '',
     phiphuthu: '',
     trangthai_thanhtoan: 'Chua thanh toan',
+    hinhthuc_thanhtoan: 'cash',
   });
 
   const [submitting, setSubmitting] = useState(false);
@@ -135,6 +139,7 @@ const InvoicesPage = () => {
       giamgia: invoice.giamgia || '',
       phiphuthu: invoice.phiphuthu || '',
       trangthai_thanhtoan: invoice.trangthai_thanhtoan || 'Chua thanh toan',
+      hinhthuc_thanhtoan: invoice.hinhthuc_thanhtoan || 'cash',
     });
     setShowUpdateModal(true);
   };
@@ -169,6 +174,7 @@ const InvoicesPage = () => {
               ? parseFloat(invoiceForm.phiphuthu)
               : null,
             trangthai_thanhtoan: invoiceForm.trangthai_thanhtoan,
+            hinhthuc_thanhtoan: invoiceForm.hinhthuc_thanhtoan,
           }),
         }
       );
@@ -276,6 +282,17 @@ const InvoicesPage = () => {
     }
   };
 
+  const getPaymentMethodText = (method) => {
+    switch (method) {
+      case 'cash':
+        return 'Tiền mặt';
+      case 'bank':
+        return 'Chuyển khoản';
+      default:
+        return method || 'Tiền mặt';
+    }
+  };
+
   const calculateFinalAmount = (invoice) => {
     const baseAmount = parseFloat(invoice.tongtien) || 0;
     const discount = parseFloat(invoice.giamgia) || 0;
@@ -283,6 +300,17 @@ const InvoicesPage = () => {
 
     const finalAmount = baseAmount - discount + surcharge;
     return Math.max(0, finalAmount);
+  };
+
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentInvoices = invoices.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(invoices.length / itemsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (loading) {
@@ -325,6 +353,7 @@ const InvoicesPage = () => {
               <th>Giảm giá</th>
               <th>Phí phụ thu</th>
               <th>Thành tiền</th>
+              <th>Hình thức thanh toán</th>
               <th>Trạng thái thanh toán</th>
               <th>Ngày lập</th>
               <th>Thao tác</th>
@@ -333,12 +362,12 @@ const InvoicesPage = () => {
           <tbody>
             {invoices.length === 0 ? (
               <tr>
-                <td colSpan="9" className="text-center">
+                <td colSpan="10" className="text-center">
                   Chưa có hóa đơn nào
                 </td>
               </tr>
             ) : (
-              invoices.map((invoice) => (
+              currentInvoices.map((invoice) => (
                 <tr key={invoice.mahd}>
                   <td className="invoice-id">{invoice.mahd}</td>
                   <td>{formatCurrency(invoice.tongtien)}</td>
@@ -353,6 +382,7 @@ const InvoicesPage = () => {
                   <td className="final-amount">
                     {formatCurrency(calculateFinalAmount(invoice))}
                   </td>
+                  <td>{getPaymentMethodText(invoice.hinhthuc_thanhtoan)}</td>
                   <td>
                     <span
                       className={`status-badge ${getStatusClassName(
@@ -388,6 +418,15 @@ const InvoicesPage = () => {
             )}
           </tbody>
         </table>
+        {invoices.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            itemsPerPage={itemsPerPage}
+            totalItems={invoices.length}
+          />
+        )}
       </div>
 
       {/* Update Modal */}
@@ -422,6 +461,19 @@ const InvoicesPage = () => {
               placeholder="Nhập phí phụ thu"
               min="0"
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="hinhthuc_thanhtoan">Hình thức thanh toán</label>
+            <select
+              id="hinhthuc_thanhtoan"
+              name="hinhthuc_thanhtoan"
+              value={invoiceForm.hinhthuc_thanhtoan}
+              onChange={handleFormChange}
+            >
+              <option value="cash">Tiền mặt</option>
+              <option value="bank">Chuyển khoản</option>
+            </select>
           </div>
 
           <div className="form-group">

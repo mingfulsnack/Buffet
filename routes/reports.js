@@ -28,4 +28,25 @@ router.get('/stats/payment-status', reportController.getPaymentStatusStats);
 // Lấy báo cáo hiệu suất bàn
 router.get('/table-performance', reportController.getTablePerformanceReport);
 
+// I. Báo cáo doanh thu tổng hợp theo ngày (doanh thu, số hóa đơn, số đơn hàng)
+router.get(
+  '/daily-revenue-comprehensive',
+  reportController.getDailyRevenueComprehensive
+);
+
+// II. Báo cáo doanh thu theo tháng (với số hóa đơn)
+router.get(
+  '/monthly-revenue-invoices',
+  reportController.getMonthlyRevenueWithInvoices
+);
+
+// III. Báo cáo doanh thu theo món ăn
+router.get('/revenue-by-dish', reportController.getRevenueByDish);
+
+// IV. Báo cáo doanh thu theo set buffet
+router.get('/revenue-by-buffet-set', reportController.getRevenueByBuffetSet);
+
+// V. Báo cáo booking bàn (đặt bàn)
+router.get('/booking-report', reportController.getBookingReport);
+
 module.exports = router;

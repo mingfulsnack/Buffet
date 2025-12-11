@@ -1,7 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './OrdersPage.scss';
-import { FaPlus, FaEdit, FaTrash, FaCheck, FaMinus } from 'react-icons/fa';
+import {
+  FaPlus,
+  FaEdit,
+  FaTrash,
+  FaCheck,
+  FaMinus,
+  FaPrint,
+} from 'react-icons/fa';
 import Modal from '../components/Modal';
+import Pagination from '../components/Pagination';
 import {
   showError,
   showLoadingToast,
@@ -21,6 +29,8 @@ const OrdersPage = () => {
   const [tables, setTables] = useState([]);
   const [menuLoading, setMenuLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
 
   const fetchOrders = useCallback(async (retryCount = 0) => {
     try {
@@ -274,6 +284,37 @@ const OrdersPage = () => {
     }
   };
 
+  const handlePrintOrder = async (orderId) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch(
+        `http://localhost:3000/api/pdf/order/${orderId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error('Không thể tạo đơn hàng PDF');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Order_${orderId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error:', error);
+      showError('Lỗi khi in đơn hàng');
+    }
+  };
+
   const addItemToOrder = (item) => {
     // Đảm bảo item có đầy đủ thuộc tính cần thiết
     const normalizedItem = {
@@ -436,6 +477,17 @@ const OrdersPage = () => {
     return new Date(dateString).toLocaleString('vi-VN');
   };
 
+  // Pagination
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentOrders = orders.slice(indexOfFirstItem, indexOfLastItem);
+  const totalPages = Math.ceil(orders.length / itemsPerPage);
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   if (loading) {
     return <div className="loading">Đang tải...</div>;
   }
@@ -472,7 +524,7 @@ const OrdersPage = () => {
                 </td>
               </tr>
             ) : (
-              orders.map((order) => (
+              currentOrders.map((order) => (
                 <tr key={order.madon}>
                   <td>{order.madon}</td>
                   <td>
@@ -516,6 +568,18 @@ const OrdersPage = () => {
                           </button>
                         </>
                       )}
+                      {order.da_xac_nhan && (
+                        <>
+                          <button
+                            className="btn btn-sm btn-info"
+                            onClick={() => handlePrintOrder(order.madon)}
+                            title="In đơn hàng"
+                          >
+                            <FaPrint />
+                          </button>
+                          <span className="confirmed-badge">Đã xác nhận</span>
+                        </>
+                      )}
                       <button
                         className="btn btn-sm btn-danger"
                         onClick={() => handleDeleteOrder(order.madon)}
@@ -523,9 +587,6 @@ const OrdersPage = () => {
                       >
                         <FaTrash />
                       </button>
-                      {order.da_xac_nhan && (
-                        <span className="confirmed-badge">Đã xác nhận</span>
-                      )}
                     </div>
                   </td>
                 </tr>
@@ -533,6 +594,15 @@ const OrdersPage = () => {
             )}
           </tbody>
         </table>
+        {orders.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            itemsPerPage={itemsPerPage}
+            totalItems={orders.length}
+          />
+        )}
       </div>
 
       {/* Order Modal */}

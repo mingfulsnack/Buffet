@@ -148,6 +148,119 @@ const getTablePerformanceReport = async (req, res) => {
   }
 };
 
+// I. Get daily revenue comprehensive report
+const getDailyRevenueComprehensive = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Please provide start date and end date'));
+    }
+
+    const data = await Report.getDailyRevenueComprehensive(startDate, endDate);
+    res.json(
+      formatResponse(
+        true,
+        data,
+        'Get daily revenue comprehensive report successfully'
+      )
+    );
+  } catch (error) {
+    console.error('Get daily revenue comprehensive error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
+  }
+};
+
+// II. Get monthly revenue with invoices
+const getMonthlyRevenueWithInvoices = async (req, res) => {
+  try {
+    const { year } = req.query;
+
+    if (!year) {
+      return res.status(400).json(formatErrorResponse('Please provide year'));
+    }
+
+    const data = await Report.getMonthlyRevenueWithInvoices(parseInt(year));
+    res.json(
+      formatResponse(
+        true,
+        data,
+        'Get monthly revenue with invoices successfully'
+      )
+    );
+  } catch (error) {
+    console.error('Get monthly revenue with invoices error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
+  }
+};
+
+// III. Get revenue by dish
+const getRevenueByDish = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Please provide start date and end date'));
+    }
+
+    const data = await Report.getRevenueByDish(startDate, endDate);
+    res.json(
+      formatResponse(true, data, 'Get revenue by dish report successfully')
+    );
+  } catch (error) {
+    console.error('Get revenue by dish error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
+  }
+};
+
+// IV. Get revenue by buffet set
+const getRevenueByBuffetSet = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Please provide start date and end date'));
+    }
+
+    const data = await Report.getRevenueByBuffetSet(startDate, endDate);
+    res.json(
+      formatResponse(
+        true,
+        data,
+        'Get revenue by buffet set report successfully'
+      )
+    );
+  } catch (error) {
+    console.error('Get revenue by buffet set error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
+  }
+};
+
+// V. Get booking report
+const getBookingReport = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+
+    if (!startDate || !endDate) {
+      return res
+        .status(400)
+        .json(formatErrorResponse('Please provide start date and end date'));
+    }
+
+    const data = await Report.getBookingReport(startDate, endDate);
+    res.json(formatResponse(true, data, 'Get booking report successfully'));
+  } catch (error) {
+    console.error('Get booking report error:', error);
+    res.status(500).json(formatErrorResponse('Server error'));
+  }
+};
+
 module.exports = {
   getRevenueByDate,
   getRevenueByMonth,
@@ -156,4 +269,9 @@ module.exports = {
   getTopRevenueDays,
   getPaymentStatusStats,
   getTablePerformanceReport,
+  getDailyRevenueComprehensive,
+  getMonthlyRevenueWithInvoices,
+  getRevenueByDish,
+  getRevenueByBuffetSet,
+  getBookingReport,
 };

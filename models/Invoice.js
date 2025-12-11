@@ -21,6 +21,7 @@ class Invoice extends BaseModel {
         giamgia,
         phiphuthu,
         trangthai_thanhtoan,
+        hinhthuc_thanhtoan,
         ngaylap
       FROM hoadon
       ORDER BY ngaylap DESC
@@ -42,6 +43,7 @@ class Invoice extends BaseModel {
         giamgia,
         phiphuthu,
         trangthai_thanhtoan,
+        hinhthuc_thanhtoan,
         ngaylap
       FROM hoadon
       WHERE mahd = $1
@@ -68,13 +70,14 @@ class Invoice extends BaseModel {
 
   // Cập nhật hóa đơn (giảm giá, phí phụ thu)
   static async updateInvoice(mahd, invoiceData) {
-    const { giamgia, phiphuthu, trangthai_thanhtoan } = invoiceData;
+    const { giamgia, phiphuthu, trangthai_thanhtoan, hinhthuc_thanhtoan } =
+      invoiceData;
     const baseModel = new BaseModel('hoadon');
 
     const query = `
       UPDATE hoadon 
-      SET giamgia = $1, phiphuthu = $2, trangthai_thanhtoan = $3
-      WHERE mahd = $4
+      SET giamgia = $1, phiphuthu = $2, trangthai_thanhtoan = $3, hinhthuc_thanhtoan = $4
+      WHERE mahd = $5
       RETURNING *
     `;
 
@@ -82,6 +85,7 @@ class Invoice extends BaseModel {
       giamgia || null,
       phiphuthu || null,
       trangthai_thanhtoan || 'Chua thanh toan',
+      hinhthuc_thanhtoan || 'cash',
       mahd,
     ]);
     return result.rows[0] || null;

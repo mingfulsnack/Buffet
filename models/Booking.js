@@ -403,10 +403,10 @@ class Booking extends BaseModel {
       );
 
       if (parseInt(otherActiveBookings.rows[0].count) === 0) {
-        await client.query(
-          'UPDATE ban SET trangthai = $1 WHERE maban = $2',
-          ['Trong', bookingInfo.maban]
-        );
+        await client.query('UPDATE ban SET trangthai = $1 WHERE maban = $2', [
+          'Trong',
+          bookingInfo.maban,
+        ]);
       }
 
       return true;
@@ -726,7 +726,8 @@ class Booking extends BaseModel {
   // Tự động cập nhật trạng thái các đặt bàn quá hạn
   async autoUpdateExpiredBookings() {
     try {
-      // Cập nhật tất cả booking có thời gian đặt < hiện tại và trạng thái vẫn là DaDat hoặc DaXacNhan
+      // CHỈ hủy booking ở trạng thái DaDat (chưa xác nhận) khi quá thời gian đặt
+      // KHÔNG hủy DaXacNhan vì khách đã được xác nhận
       const result = await this.query(
         `
         UPDATE ${this.tableName}
@@ -735,7 +736,7 @@ class Booking extends BaseModel {
               WHEN ghichu IS NULL OR ghichu = '' THEN 'Tự động hủy do quá hạn'
               ELSE ghichu || ' (Tự động hủy do quá hạn)'
             END
-        WHERE trangthai IN ('DaDat', 'DaXacNhan')
+        WHERE trangthai = 'DaDat'
           AND thoigian_dat < NOW()
         RETURNING maphieu
       `
@@ -743,7 +744,7 @@ class Booking extends BaseModel {
 
       if (result.rows.length > 0) {
         console.log(
-          `🔄 Tự động hủy ${result.rows.length} đặt bàn quá hạn:`,
+          `🔄 Tự động hủy ${result.rows.length} đặt bàn chưa xác nhận quá hạn:`,
           result.rows.map((r) => r.maphieu)
         );
       }
