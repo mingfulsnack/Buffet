@@ -88,14 +88,11 @@ const AdminBookingsPage = () => {
     const cancelOperation = async () => {
       await bookingAPI.cancelBooking(selectedBooking.maphieu, cancelReason);
 
-      // Update booking status in local state
-      setBookings((prev) =>
-        prev.map((booking) =>
-          booking.maphieu === selectedBooking.maphieu
-            ? { ...booking, trangthai: 'DaHuy' }
-            : booking
-        )
-      );
+      // Reload bookings to get updated data including ghichu
+      const response = await bookingAPI.getBookings({ limit: 1000 });
+      if (response.data.success) {
+        setBookings(response.data.data);
+      }
 
       setShowCancelModal(false);
       setSelectedBooking(null);
@@ -220,6 +217,7 @@ const AdminBookingsPage = () => {
                   <th>Bàn</th>
                   <th>Số người</th>
                   <th>Thời gian đặt</th>
+                  <th>Ghi chú</th>
                   <th>Trạng thái</th>
                   <th>Thao tác</th>
                 </tr>
@@ -239,6 +237,7 @@ const AdminBookingsPage = () => {
                     <td>{booking.tenban}</td>
                     <td>{booking.songuoi}</td>
                     <td>{formatDateTime(booking.thoigian_dat)}</td>
+                    <td>{booking.ghichu}</td>
                     <td>
                       <span
                         className={`status-badge ${getStatusColor(

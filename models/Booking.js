@@ -384,10 +384,11 @@ class Booking extends BaseModel {
         [bookingInfo.maphieu, reason || 'Hủy đặt bàn', manv]
       );
 
-      // Cập nhật trạng thái booking thành DaHuy
+      // Cập nhật trạng thái booking thành DaHuy và lưu lý do hủy vào ghichu
+      const cancelNote = reason ? `Lý do hủy: ${reason}` : 'Đã hủy đặt bàn';
       await client.query(
-        `UPDATE ${this.tableName} SET trangthai = $1, thoigian_huy = NOW(), auto_delete_at = NOW() + INTERVAL '30 minutes', updated_at = NOW() WHERE maphieu = $2`,
-        ['DaHuy', bookingInfo.maphieu]
+        `UPDATE ${this.tableName} SET trangthai = $1, ghichu = $2, thoigian_huy = NOW(), auto_delete_at = NOW() + INTERVAL '30 minutes', updated_at = NOW() WHERE maphieu = $3`,
+        ['DaHuy', cancelNote, bookingInfo.maphieu]
       );
 
       // Cập nhật trạng thái bàn về Trong (trạng thái sẽ tự động tính lại khi load)
