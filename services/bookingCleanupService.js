@@ -1,37 +1,21 @@
 const { Booking } = require('../models');
 
 class BookingCleanupService {
-  // Tự động xóa booking cũ vào 0h hàng ngày
+  // Tự động xóa booking cũ vào 0h hàng ngày - DISABLED
   static async cleanupOldBookings() {
     try {
-      console.log('Starting booking cleanup at:', new Date().toISOString());
-
-      const today = new Date();
-      today.setHours(0, 0, 0, 0); // Set to start of today
-
-      // Chỉ xóa những booking thỏa mãn:
-      // 1. Ngày đặt bàn < hôm nay (không xóa booking tương lai)
-      // 2. Trạng thái là DaHuy, DaXacNhan, hoặc QuaHan
-      // 3. Không xóa DaDat vì có thể khách vẫn sẽ đến
-      const result = await Booking.query(
-        `
-        DELETE FROM phieudatban 
-        WHERE thoigian_dat < $1 
-        AND trangthai IN ('DaHuy', 'DaXacNhan', 'QuaHan')
-        RETURNING maphieu, thoigian_dat, trangthai
-      `,
-        [today]
-      );
-
       console.log(
-        `Cleaned up ${result.rows.length} old bookings:`,
-        result.rows
+        'Booking cleanup is disabled - keeping all booking records for history'
       );
+
+      // ĐÃ TẮT CHỨC NĂNG XÓA TỰ ĐỘNG
+      // Giữ lại tất cả booking để làm lịch sử và báo cáo
+      // Không xóa booking đã hủy hoặc đã xác nhận
 
       return {
         success: true,
-        deletedCount: result.rows.length,
-        deletedBookings: result.rows,
+        deletedCount: 0,
+        message: 'Auto-delete disabled - all bookings preserved',
       };
     } catch (error) {
       console.error('Error in booking cleanup:', error);
@@ -81,15 +65,20 @@ class BookingCleanupService {
     }
   }
 
-  // Cleanup booking đã hủy quá 30 phút
+  // Cleanup booking đã hủy quá 30 phút - DISABLED
   static async cleanupCancelledBookings() {
     try {
-      console.log('Cleaning up cancelled bookings (30min+ old)...');
-      const deletedCount = await Booking.cleanupCancelledBookings();
-      
+      console.log(
+        'Cancelled booking cleanup is disabled - keeping all records'
+      );
+
+      // ĐÃ TẮT CHỨC NĂNG XÓA BOOKING ĐÃ HỦY
+      // Giữ lại để làm lịch sử
+
       return {
         success: true,
-        deletedCount,
+        deletedCount: 0,
+        message: 'Auto-delete disabled - cancelled bookings preserved',
       };
     } catch (error) {
       console.error('Error cleaning up cancelled bookings:', error);
