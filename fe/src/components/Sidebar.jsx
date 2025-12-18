@@ -131,6 +131,7 @@ const Sidebar = memo(() => {
             <li key={index} className="menu-item">
               <NavLink
                 to={item.path}
+                end={item.path === '/admin' || item.path === '/'}
                 className={({ isActive }) =>
                   `menu-link ${isActive || item.isActive ? 'active' : ''}`
                 }

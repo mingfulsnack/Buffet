@@ -148,7 +148,6 @@ const AdminBookingsPage = () => {
       DaDat: 'status-pending',
       DaXacNhan: 'status-confirmed',
       DaHuy: 'status-cancelled',
-      QuaHan: 'status-expired',
     };
     return statusColors[status] || 'status-default';
   };
@@ -158,7 +157,6 @@ const AdminBookingsPage = () => {
       DaDat: 'Đã đặt',
       DaXacNhan: 'Đã xác nhận',
       DaHuy: 'Đã hủy',
-      QuaHan: 'Quá hạn',
     };
     return statusTexts[status] || status;
   };
@@ -195,7 +193,6 @@ const AdminBookingsPage = () => {
             <option value="DaDat">Đã đặt</option>
             <option value="DaXacNhan">Đã xác nhận</option>
             <option value="DaHuy">Đã hủy</option>
-            <option value="QuaHan">Quá hạn</option>
           </select>
         </div>
       </div>
@@ -273,8 +270,7 @@ const AdminBookingsPage = () => {
                           </>
                         )}
                         {(booking.trangthai === 'DaXacNhan' ||
-                          booking.trangthai === 'DaHuy' ||
-                          booking.trangthai === 'QuaHan') && (
+                          booking.trangthai === 'DaHuy') && (
                           <span className="no-actions">Không có thao tác</span>
                         )}
                       </div>

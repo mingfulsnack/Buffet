@@ -31,13 +31,15 @@ class BookingCleanupService {
     try {
       const now = new Date();
 
-      // Booking được coi là quá hạn nếu:
+      // Booking được coi là hủy tự động nếu:
       // - Trạng thái vẫn là DaDat
       // - Thời gian đặt + 10 phút < thời gian hiện tại (cho khách 10 phút để đến)
       const result = await Booking.query(
         `
         UPDATE phieudatban 
-        SET trangthai = 'QuaHan',
+        SET trangthai = 'DaHuy',
+            ghichu = 'Lý do hủy: Quá thời gian đặt bàn, khách không đến',
+            thoigian_huy = NOW(),
             updated_at = CURRENT_TIMESTAMP
         WHERE trangthai = 'DaDat' 
         AND thoigian_dat + INTERVAL '10 minutes' < $1
