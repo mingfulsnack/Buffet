@@ -503,9 +503,9 @@ const BookingPage = () => {
                           <div className="table-capacity">
                             {table.soghe} ghế
                           </div>
-                          {/* {table.vitri && (
-                            <div className="table-location">{table.vitri}</div>
-                          )} */}
+                          {table.ghichu && (
+                            <div className="table-location">{table.ghichu}</div>
+                          )}
                         </div>
                       ))}
                     </div>
