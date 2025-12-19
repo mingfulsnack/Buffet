@@ -183,7 +183,7 @@ class Table extends BaseModel {
         throw new Error('Trạng thái không hợp lệ');
       }
 
-      // Nếu chuyển sang Trong, kiểm tra có booking đang hoạt động không
+      // Nếu chuyển sang Trong, tự động hoàn thành các booking đang hoạt động
       if (trangthai === 'Trong') {
         const activeBooking = await client.query(
           `SELECT * FROM phieudatban 
@@ -194,10 +194,21 @@ class Table extends BaseModel {
           [id]
         );
 
+        // Nếu có booking đang hoạt động, tự động chuyển sang HoanThanh
         if (activeBooking.rows.length > 0) {
-          throw new Error(
-            'Không thể đặt trạng thái "Trống" khi bàn đang có đặt chỗ hoạt động. Vui lòng hủy đặt chỗ trước.'
+          const booking = activeBooking.rows[0];
+          
+          // Cập nhật trạng thái booking sang HoanThanh
+          await client.query(
+            `UPDATE phieudatban 
+             SET trangthai = 'HoanThanh',
+                 ghichu = COALESCE(ghichu, '') || ' [Admin đã chuyển bàn về trống lúc ' || TO_CHAR(NOW(), 'DD/MM/YYYY HH24:MI') || ']',
+                 updated_at = NOW()
+             WHERE maphieu = $1`,
+            [booking.maphieu]
           );
+
+          console.log(`Auto-completed booking ${booking.maphieu} when freeing table ${id}`);
         }
       }
 
@@ -205,7 +216,7 @@ class Table extends BaseModel {
       const result = await client.query(
         `
         UPDATE ban 
-        SET trangthai = $1, version = version + 1, updated_at = NOW()
+        SET trangthai = $1, version = version + 1
         WHERE maban = $2
         RETURNING *
       `,

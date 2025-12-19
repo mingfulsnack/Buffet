@@ -32,6 +32,28 @@ const TablesPage = () => {
     // { value: 'BaoTri', label: 'Bảo trì' },
   ];
 
+  // Lấy danh sách trạng thái cho dropdown (bao gồm trạng thái hiện tại)
+  const getAvailableStatuses = (currentStatus) => {
+    // Luôn có option "Trống"
+    const statuses = [...tableStatuses];
+    
+    // Nếu bàn đang có trạng thái khác, thêm vào để hiển thị
+    if (currentStatus && !statuses.find(s => s.value === currentStatus)) {
+      const statusLabels = {
+        'DaDat': 'Đang đặt trước',
+        'DangSuDung': 'Đang được sử dụng',
+        'Lock': 'Khóa',
+        'BaoTri': 'Bảo trì'
+      };
+      statuses.unshift({
+        value: currentStatus,
+        label: statusLabels[currentStatus] || currentStatus
+      });
+    }
+    
+    return statuses;
+  };
+
   // Mapping trạng thái từ backend sang hiển thị
   const getStatusDisplay = (table) => {
     switch (table.trangthai) {
@@ -472,12 +494,17 @@ const TablesPage = () => {
                 onChange={handleFormChange}
                 required
               >
-                {tableStatuses.map((status) => (
+                {getAvailableStatuses(editingTable.trangthai).map((status) => (
                   <option key={status.value} value={status.value}>
                     {status.label}
                   </option>
                 ))}
               </select>
+              {(formData.trangthai === 'DaDat' || formData.trangthai === 'DangSuDung') && (
+                <small className="form-help-text" style={{ color: '#666', marginTop: '5px', display: 'block' }}>
+                  💡 Chuyển về "Trống" để kết thúc sử dụng bàn (booking sẽ tự động hoàn thành)
+                </small>
+              )}
             </div>
           )}
 

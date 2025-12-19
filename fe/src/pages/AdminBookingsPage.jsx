@@ -157,6 +157,7 @@ const AdminBookingsPage = () => {
       DaDat: 'Đã đặt',
       DaXacNhan: 'Đã xác nhận',
       DaHuy: 'Đã hủy',
+      HoanThanh: 'Hoàn thành',
     };
     return statusTexts[status] || status;
   };

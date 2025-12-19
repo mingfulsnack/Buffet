@@ -11,13 +11,13 @@ class Report extends BaseModel {
 
     const query = `
       SELECT 
-        DATE(ngaylap) as date,
+        (DATE(ngaylap) + INTERVAL '1 day')::date as date,
         COUNT(*) as invoice_count,
         SUM(tongtien - COALESCE(giamgia, 0) + COALESCE(phiphuthu, 0)) as total_revenue
       FROM hoadon
       WHERE trangthai_thanhtoan = 'Da thanh toan'
-        AND DATE(ngaylap) >= $1
-        AND DATE(ngaylap) <= $2
+        AND DATE(ngaylap) >= $1::date
+        AND DATE(ngaylap) <= $2::date
       GROUP BY DATE(ngaylap)
       ORDER BY DATE(ngaylap)
     `;
@@ -92,8 +92,8 @@ class Report extends BaseModel {
           END
         ) as average_order_value
       FROM hoadon
-      WHERE DATE(ngaylap) >= $1
-        AND DATE(ngaylap) <= $2
+      WHERE DATE(ngaylap) >= $1::date
+        AND DATE(ngaylap) <= $2::date
     `;
 
     const result = await baseModel.query(query, [startDate, endDate]);
@@ -106,13 +106,13 @@ class Report extends BaseModel {
 
     const query = `
       SELECT 
-        DATE(ngaylap) as date,
+        (DATE(ngaylap) + INTERVAL '1 day')::date as date,
         COUNT(*) as invoice_count,
         SUM(tongtien - COALESCE(giamgia, 0) + COALESCE(phiphuthu, 0)) as total_revenue
       FROM hoadon
       WHERE trangthai_thanhtoan = 'Da thanh toan'
-        AND DATE(ngaylap) >= $1
-        AND DATE(ngaylap) <= $2
+        AND DATE(ngaylap) >= $1::date
+        AND DATE(ngaylap) <= $2::date
       GROUP BY DATE(ngaylap)
       ORDER BY total_revenue DESC
       LIMIT $3
@@ -132,8 +132,8 @@ class Report extends BaseModel {
         COUNT(*) as count,
         SUM(tongtien - COALESCE(giamgia, 0) + COALESCE(phiphuthu, 0)) as total_amount
       FROM hoadon
-      WHERE DATE(ngaylap) >= $1
-        AND DATE(ngaylap) <= $2
+      WHERE DATE(ngaylap) >= $1::date
+        AND DATE(ngaylap) <= $2::date
       GROUP BY trangthai_thanhtoan
       ORDER BY count DESC
     `;

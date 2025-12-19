@@ -157,41 +157,39 @@ const ReportsPage = () => {
           dailyDataMap[dateKey] = (dailyDataMap[dateKey] || 0) + value;
         });
 
-        // Tạo tất cả ngày từ startDate đến endDate
-        const startDate = new Date(dateRange.startDate + 'T00:00:00');
-        const endDate = new Date(dateRange.endDate + 'T00:00:00');
+        console.log('Daily Data Map:', dailyDataMap);
+
+        // Tạo tất cả ngày từ startDate đến endDate (dùng string thay vì Date để tránh timezone)
+        const [startYear, startMonth, startDay] = dateRange.startDate.split('-').map(Number);
+        const [endYear, endMonth, endDay] = dateRange.endDate.split('-').map(Number);
+        const startDate = new Date(startYear, startMonth - 1, startDay);
+        const endDate = new Date(endYear, endMonth - 1, endDay);
         const daysDiff =
           Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24)) + 1;
 
         const currentDate = new Date(startDate);
         while (currentDate <= endDate) {
-          const dateKey = currentDate.toISOString().split('T')[0];
+          // Tạo dateKey từ local date để khớp với backend (không dùng toISOString vì bị timezone offset)
+          const year = currentDate.getFullYear();
+          const month = (currentDate.getMonth() + 1).toString().padStart(2, '0');
+          const day = currentDate.getDate().toString().padStart(2, '0');
+          const dateKey = `${year}-${month}-${day}`;
+          
           let displayDate;
 
           // Nếu khoảng thời gian <= 7 ngày, hiển thị dd/mm
           // Nếu > 7 ngày và <= 31 ngày, hiển thị dd/mm
           // Nếu > 31 ngày, hiển thị dd/mm/yy
           if (daysDiff <= 31) {
-            displayDate = `${currentDate
-              .getDate()
-              .toString()
-              .padStart(2, '0')}/${(currentDate.getMonth() + 1)
-              .toString()
-              .padStart(2, '0')}`;
+            displayDate = `${day}/${month}`;
           } else {
-            displayDate = `${currentDate
-              .getDate()
-              .toString()
-              .padStart(2, '0')}/${(currentDate.getMonth() + 1)
-              .toString()
-              .padStart(2, '0')}/${currentDate
-              .getFullYear()
-              .toString()
-              .slice(-2)}`;
+            displayDate = `${day}/${month}/${year.toString().slice(-2)}`;
           }
 
           labels.push(displayDate);
           dataValues.push(dailyDataMap[dateKey] || 0);
+
+          console.log(`Date: ${dateKey}, Display: ${displayDate}, Revenue: ${dailyDataMap[dateKey] || 0}`);
 
           // Chuyển sang ngày tiếp theo
           currentDate.setDate(currentDate.getDate() + 1);
@@ -284,19 +282,12 @@ const ReportsPage = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return '';
-    // Tạo date với timezone local để tránh offset
-    const dateParts = dateString.split('T')[0].split('-');
-    const date = new Date(
-      parseInt(dateParts[0]),
-      parseInt(dateParts[1]) - 1,
-      parseInt(dateParts[2])
-    );
-
-    return date.toLocaleDateString('vi-VN', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
+    // Lấy phần ngày yyyy-mm-dd và format trực tiếp, không tạo Date object để tránh timezone offset
+    const dateOnly = dateString.split('T')[0]; // 2024-12-19
+    const [year, month, day] = dateOnly.split('-');
+    
+    // Format dd/mm/yyyy
+    return `${day}/${month}/${year}`;
   };
 
   const getChartOptions = () => {
