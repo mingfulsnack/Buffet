@@ -500,11 +500,6 @@ const TablesPage = () => {
                   </option>
                 ))}
               </select>
-              {(formData.trangthai === 'DaDat' || formData.trangthai === 'DangSuDung') && (
-                <small className="form-help-text" style={{ color: '#666', marginTop: '5px', display: 'block' }}>
-                  💡 Chuyển về "Trống" để kết thúc sử dụng bàn (booking sẽ tự động hoàn thành)
-                </small>
-              )}
             </div>
           )}
 

@@ -202,7 +202,7 @@ class Table extends BaseModel {
           await client.query(
             `UPDATE phieudatban 
              SET trangthai = 'HoanThanh',
-                 ghichu = COALESCE(ghichu, '') || ' [Admin đã chuyển bàn về trống lúc ' || TO_CHAR(NOW(), 'DD/MM/YYYY HH24:MI') || ']',
+                 ghichu = COALESCE(ghichu, '') || ' [Đã chuyển bàn về trống lúc ' || TO_CHAR(NOW(), 'DD/MM/YYYY HH24:MI') || ']',
                  updated_at = NOW()
              WHERE maphieu = $1`,
             [booking.maphieu]
