@@ -28,8 +28,8 @@ const TablesPage = () => {
   // Danh sách trạng thái bàn (chỉ những trạng thái có thể thay đổi thủ công)
   const tableStatuses = [
     { value: 'Trong', label: 'Trống' },
-    { value: 'Lock', label: 'Khóa' },
-    { value: 'BaoTri', label: 'Bảo trì' },
+    // { value: 'Lock', label: 'Khóa' },
+    // { value: 'BaoTri', label: 'Bảo trì' },
   ];
 
   // Mapping trạng thái từ backend sang hiển thị

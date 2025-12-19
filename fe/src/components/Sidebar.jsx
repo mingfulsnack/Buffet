@@ -62,27 +62,12 @@ const Sidebar = memo(() => {
     {
       path: '/admin',
       icon: <FaTachometerAlt />,
-      label: 'Admin Dashboard',
-    },
-    {
-      path: '/admin/menu',
-      icon: <FaUtensils />,
-      label: 'Quản Lý Thực Đơn',
+      label: 'Trang Chủ',
     },
     {
       path: '/admin/bookings',
       icon: <FaCalendarAlt />,
       label: 'Quản Lý Đặt Bàn',
-    },
-    {
-      path: '/admin/employees',
-      icon: <FaUserTie />,
-      label: 'Quản Lý Nhân Viên',
-    },
-    {
-      path: '/admin/tables',
-      icon: <FaTable />,
-      label: 'Quản Lý Bàn',
     },
     {
       path: '/admin/orders',
@@ -95,9 +80,24 @@ const Sidebar = memo(() => {
       label: 'Quản Lý Hóa Đơn',
     },
     {
+      path: '/admin/tables',
+      icon: <FaTable />,
+      label: 'Quản Lý Bàn',
+    },
+    {
+      path: '/admin/menu',
+      icon: <FaUtensils />,
+      label: 'Quản Lý Thực Đơn',
+    },
+    {
+      path: '/admin/employees',
+      icon: <FaUserTie />,
+      label: 'Quản Lý Nhân Viên',
+    },
+    {
       path: '/admin/reports',
       icon: <FaChartBar />,
-      label: 'Báo Cáo',
+      label: 'Báo Cáo Thống Kê',
     },
   ];
 
